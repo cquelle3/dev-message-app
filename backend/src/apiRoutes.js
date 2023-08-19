@@ -8,6 +8,7 @@ router.get('/', function(req, res) {
     });
 });
 
+/***USERS***/
 router.get('/users', async (req, res) => {
     const allUsers = await User.find();
     return res.status(200).json(allUsers);
