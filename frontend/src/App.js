@@ -3,9 +3,29 @@ import { BsList } from "react-icons/bs";
 import { BiHash } from "react-icons/bi";
 import { BsSend } from "react-icons/bs";
 import { useState } from 'react';
+import axios from 'axios';
+
+const baseURL = "http://localhost:3001/api";
 
 function App() {
   const [open, setOpen] = useState(true);
+
+  function getUsers(){
+    axios.get(baseURL + '/users').then((res) => {
+      console.log(res);
+    });
+  }
+
+  function postUser(){
+    axios.post(baseURL + '/users', {
+      email: 'colinquelle@yahoo.com',
+      username: 'hubbawhat',
+      password: 'hunter123!'
+    })
+    .then((res) => {
+      console.log(res);
+    });
+  }
 
   return (
     <div className='flex h-screen'>
@@ -204,7 +224,7 @@ function App() {
         <div className='flex items-center mt-auto w-full bg-red-200 rounded'>
           <input type='text' spellCheck='false' placeholder='Message' className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
           <div className='pl-4 pr-4'>
-            <BsSend className='w-5 h-5'></BsSend>
+            <BsSend className='w-5 h-5' onClick={postUser}></BsSend>
           </div>
         </div>
       </div>
