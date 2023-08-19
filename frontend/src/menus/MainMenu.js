@@ -9,12 +9,6 @@ const baseURL = "http://localhost:3001/api";
 function MainMenu() {
   const [open, setOpen] = useState(true);
 
-  function getUsers(){
-    axios.get(baseURL + '/users').then((res) => {
-      console.log(res);
-    });
-  }
-
   function postUser(){
     axios.post(baseURL + '/users', {
       email: 'colinquelle@yahoo.com',
