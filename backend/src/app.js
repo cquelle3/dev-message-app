@@ -1,13 +1,19 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const apiRoutes = require('./apiRoutes');
 const bodyParser = require('body-parser');
+const apiRoutes = require('./apiRoutes');
+const authRoutes = require('./authRoutes');
+
+//accesses .env file for project
+require('dotenv').config();
 
 const app = express();
 const PORT = 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
@@ -16,6 +22,8 @@ app.get('/', (req, res) => {
 
 //use routes in apiRoutes.js 
 app.use('/api', apiRoutes);
+//use routes in authRoutes.js
+app.use('/auth', authRoutes);
 
 //startup function
 const start = async () => {

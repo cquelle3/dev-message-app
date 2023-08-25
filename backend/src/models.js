@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
     email: {
@@ -14,6 +15,10 @@ const UserSchema = new mongoose.Schema({
         required: true
     }
 });
+
+UserSchema.methods.comparePassword = function(password) {
+    return bcrypt.compareSync(password, this.password);
+}
 
 const User = mongoose.model("User", UserSchema);
 

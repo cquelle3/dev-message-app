@@ -1,40 +1,101 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import AuthContext from "../context/AuthProvider";
+import axios from 'axios';
+import { Link } from "react-router-dom";
 
-const baseURL = "http://localhost:3001/api";
+const LOGIN_URL = 'http://localhost:3001/auth/login';
 
 function LoginMenu() {
 
-    const [users, setUsers] = useState([]);
+    const { setAuth } = useContext(AuthContext);  
+    const userRef = useRef();
+    const errRef = useRef();
 
-    function getUsers(){
-        axios.get(baseURL + '/users').then((res) => {
-          setUsers(res.data);
-        });
-    }
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [errMsg, setErrMsg] = useState('');
 
     useEffect(() => {
-        getUsers();
-    });
+        userRef.current.focus();
+    }, []);
+
+    useEffect(() => {
+        setErrMsg('');
+    }, [username, password]);
+
+    const handleSubmit = async (e) => {
+        //prevents default event of reloading page on form submit
+        e.preventDefault();
+
+        try{
+            const res = await axios.post(LOGIN_URL, JSON.stringify({username, password}), 
+                {
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+            
+            console.log(JSON.stringify(res));
+            
+            //clear the username and password strings
+            setUsername('');
+            setPassword('');
+
+            const accessToken = res?.data?.accessToken;
+            //store the username, password, and access token in the app's global auth context
+            setAuth({ username, password, accessToken });
+        } 
+        catch(err) {
+            if(!err?.response){
+                setErrMsg('No Server Response');
+            }
+            else if(err.response?.status === 400){
+                setErrMsg('Missing Username or Password');
+            }
+            else if(err.response?.status === 401){
+                setErrMsg('Unauthorized');
+            }
+            else{
+                setErrMsg('Login Failed');
+            }
+            //focus on the error message if there is an error
+            //errRef.current.focus();
+        }
+    }
 
     return (
         <div className='flex flex-col items-center justify-center h-screen bg-red-400'>
-            <form className='pt-5 pb-5 px-10 bg-white shadow-md rounded'>
+            <form onSubmit={handleSubmit} className='pt-5 pb-5 px-10 bg-white shadow-md rounded'>
                 <div className='pb-3'>
-                    <label for='username' className='font-bold'>Username</label>
-                    <input id='username' className='w-full h-10 border rounded'/>
+                    <label htmlFor='username' className='font-bold'>Username</label>
+                    <input 
+                        id='username' 
+                        type='text'
+                        ref={userRef} 
+                        autoComplete='off'
+                        onChange={(e) => setUsername(e.target.value)}
+                        value={username}
+                        className='w-full h-10 border rounded'
+                        required
+                    />
                 </div>
 
                 <div className='pb-3'>
-                    <label for='password' className='font-bold'>Password</label>
-                    <input id='password' className='w-full h-10 border rounded'/>
+                    <label htmlFor='password' className='font-bold'>Password</label>
+                    <input 
+                        id='password'
+                        type='password'
+                        onChange={(e) => setPassword(e.target.value)}
+                        value={password}
+                        className='w-full h-10 border rounded'
+                        required
+                    />
                 </div>
 
                 <div className='flex flex-col'>
                     <button className='w-full h-10 font-bold bg-red-400 rounded'>Login</button>
                     <div className='flex flex-col pt-4'>
-                        <a href='https://localhost:3000' className='text-red-400 font-medium'>Forgot Password?</a>
-                        <a href='https://localhost:3000' className='text-red-400 font-medium'>Create Account</a>
+                        <Link to='/' className='text-red-400 font-medium hover:underline'>Forgot Password?</Link>
+                        <Link to='/create-account' className='text-red-400 font-medium hover:underline'>Create Account</Link>
                     </div>
                 </div>
             </form>
