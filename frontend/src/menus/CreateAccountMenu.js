@@ -20,7 +20,7 @@ function CreateAccountMenu() {
                     headers: { 'Content-Type': 'application/json' }
                 }
             );
-            console.log(JSON.stringify(res));
+            console.log(res);
         }
         catch(err){
             console.log(err);
@@ -31,7 +31,7 @@ function CreateAccountMenu() {
         <div className='flex flex-col items-center justify-center h-screen bg-red-400'>
             <form onSubmit={handleSubmit} className='pt-5 pb-5 px-10 bg-white shadow-md rounded'>
                 <div className='pb-3'>
-                    <label for='username' className='font-bold'>Email</label>
+                    <label htmlFor='username' className='font-bold'>Email</label>
                     <input 
                         id='email' 
                         type='text'
@@ -44,7 +44,7 @@ function CreateAccountMenu() {
                 </div>
 
                 <div className='pb-3'>
-                    <label for='username' className='font-bold'>Username</label>
+                    <label htmlFor='username' className='font-bold'>Username</label>
                     <input 
                         id='username' 
                         type='text'
@@ -57,7 +57,7 @@ function CreateAccountMenu() {
                 </div>
 
                 <div className='pb-3'>
-                    <label for='password' className='font-bold'>Password</label>
+                    <label htmlFor='password' className='font-bold'>Password</label>
                     <input 
                         id='password' 
                         type='password'

@@ -36,14 +36,39 @@ router.post('/login', async function(req, res) {
     }
 
     const signObj = {
+        id: user.id,
         email: user.email,
         username: user.username,
         password: user.password
     };
 
+    //get user id
+    const userId = user.id;
     //sign a json token and send it back to the frontend
     const accessToken = jwt.sign(signObj, process.env.ACCESS_TOKEN_SECRET);
-    return res.json({ accessToken: accessToken });
+    return res.json({ accessToken: accessToken, userId: userId });
+});
+
+//verify jwt tokens
+router.post('/verify', function(req, res) {
+    //get token from request
+    const accessToken = req.body.accessToken;
+
+    //if no token is given, return error
+    if(!accessToken){
+        return res.status(401).send("Authorization failed. No token was given.");
+    }
+    else{
+        try{
+            //verify token and send back the result
+            tokenVerify = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+            return res.json({verified: tokenVerify});
+        }
+        catch(error){ 
+            //if the token is invalid, send an error
+            return res.status(401).send("Authorization failed. Invalid token.");
+        }
+    }
 });
 
 module.exports = router;

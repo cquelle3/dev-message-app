@@ -1,11 +1,15 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import AuthContext from "../context/AuthProvider";
 import axios from 'axios';
-import { Link } from "react-router-dom";
+import { Link, createSearchParams, useNavigate } from "react-router-dom";
 
 const LOGIN_URL = 'http://localhost:3001/auth/login';
+const VERIFY_URL = 'http://localhost:3001/auth/verify';
 
 function LoginMenu() {
+
+    //used to navigate between routes
+    const navigate = useNavigate();
 
     const { setAuth } = useContext(AuthContext);  
     const userRef = useRef();
@@ -16,8 +20,23 @@ function LoginMenu() {
     const [errMsg, setErrMsg] = useState('');
 
     useEffect(() => {
+        
+        const verifyToken = async () => {
+            const res = await axios.post(VERIFY_URL, JSON.stringify({ accessToken: localStorage.getItem('accessToken') }), 
+              {
+                headers: { 'Content-Type': 'application/json' }
+              }
+            ).catch((error) => console.log(error));
+
+            if(res?.status === 200 && localStorage.getItem('userId')){
+                navigate('/main-menu');
+            }
+        }
+          
         userRef.current.focus();
-    }, []);
+        verifyToken().catch((error) => console.log(error));
+        
+    }, [navigate]);
 
     useEffect(() => {
         setErrMsg('');
@@ -33,16 +52,21 @@ function LoginMenu() {
                     headers: { 'Content-Type': 'application/json' }
                 }
             );
-            
-            console.log(JSON.stringify(res));
-            
+            console.log(res);
             //clear the username and password strings
             setUsername('');
             setPassword('');
 
             const accessToken = res?.data?.accessToken;
+            const userId = res?.data?.userId;
             //store the username, password, and access token in the app's global auth context
-            setAuth({ username, password, accessToken });
+            setAuth({ userId, username, password, accessToken });
+            //add access token to local storage
+            localStorage.setItem("accessToken", accessToken);
+            //add user ID to local storage
+            localStorage.setItem("userId", userId);
+            //navigate to main menu
+            navigate('/main-menu');
         } 
         catch(err) {
             if(!err?.response){

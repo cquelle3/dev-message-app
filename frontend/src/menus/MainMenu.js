@@ -1,23 +1,31 @@
 import { BsList } from "react-icons/bs";
 import { BiHash } from "react-icons/bi";
 import { BsSend } from "react-icons/bs";
-import { useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 
 const baseURL = "http://localhost:3001/api";
 
 function MainMenu() {
-  const [open, setOpen] = useState(true);
 
-  function postUser(){
-    axios.post(baseURL + '/users', {
-      email: 'colinquelle@yahoo.com',
-      username: 'hubbawhat',
-      password: 'hunter123!'
-    })
-    .then((res) => {
-      console.log(res);
-    });
+  //used to navigate between routes
+  const navigate = useNavigate();
+
+  const [open, setOpen] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+    console.log(accessToken);
+    console.log(userId);
+  }, []);
+
+  function logout(){
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userId');
+
+    navigate('/login');
   }
 
   return (
@@ -40,6 +48,8 @@ function MainMenu() {
             <BiHash></BiHash><p className='pl-2 font-medium select-none'>Test Channel 3</p>
           </div>
         </div>
+
+        <button onClick={logout}>logout</button>
       </div>
 
       {/*BODY*/}
@@ -194,7 +204,7 @@ function MainMenu() {
             <div className='bg-red-100 w-12 h-12 rounded-full'></div>
             <div className='pl-3'>
               <p className='font-medium'>User 1</p>
-              <p className='font-medium'>hi</p>
+              <p className='font-medium'>butt</p>
             </div>
           </div>
 
@@ -217,7 +227,7 @@ function MainMenu() {
         <div className='flex items-center mt-auto w-full bg-red-200 rounded'>
           <input type='text' spellCheck='false' placeholder='Message' className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
           <div className='pl-4 pr-4'>
-            <BsSend className='w-5 h-5' onClick={postUser}></BsSend>
+            <BsSend className='w-5 h-5'></BsSend>
           </div>
         </div>
       </div>
