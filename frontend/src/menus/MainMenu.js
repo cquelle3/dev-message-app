@@ -1,12 +1,16 @@
 import { BsList } from "react-icons/bs";
 import { BiHash } from "react-icons/bi";
 import { BsSend } from "react-icons/bs";
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../App";
 
 const baseURL = "http://localhost:3001/api";
 
 function MainMenu() {
+
+  //use context to set authenticated user info throughout application
+  const { authInfo, setAuthInfo } = useContext(AuthContext);
 
   //used to navigate between routes
   const navigate = useNavigate();
@@ -15,16 +19,14 @@ function MainMenu() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
-    const userId = localStorage.getItem('userId');
-    console.log(accessToken);
-    console.log(userId);
-  }, []);
+    const accessToken = authInfo?.accessToken;
+    const userId = authInfo?.userId;    
+  });
 
   function logout(){
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userId');
-
+    setAuthInfo(null);
     navigate('/login');
   }
 

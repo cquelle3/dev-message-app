@@ -1,17 +1,22 @@
 import axios from 'axios';
-import React from 'react';
+import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
+import { AuthContext } from './App';
 
 const VERIFY_URL = 'http://localhost:3001/auth/verify';
 
-const ProtectedRoute = function({verified, children}) {
+const ProtectedRoute = function({children}) {
 
-        if(verified){
+        const { authInfo } = useContext(AuthContext);
+
+        if(authInfo?.accessToken){
+            console.log('verified.');
             return(
                 children
             );
         }
         else{
+            console.log('not verified.');
             return (
                 <Navigate to='/login' replace />
             );

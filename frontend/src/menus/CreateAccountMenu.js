@@ -20,7 +20,6 @@ function CreateAccountMenu() {
                     headers: { 'Content-Type': 'application/json' }
                 }
             );
-            console.log(res);
         }
         catch(err){
             console.log(err);
