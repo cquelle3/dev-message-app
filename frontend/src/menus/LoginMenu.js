@@ -25,6 +25,12 @@ function LoginMenu() {
         setErrMsg('');
     }, [username, password]);
 
+    useEffect(() => {
+        if(localStorage.getItem('accessToken')){
+            navigate('/main-menu');
+        }
+    });
+
     const handleSubmit = async (e) => {
         //prevents default event of reloading page on form submit
         e.preventDefault();

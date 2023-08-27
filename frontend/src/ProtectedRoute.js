@@ -9,7 +9,7 @@ const ProtectedRoute = function({children}) {
 
         const { authInfo } = useContext(AuthContext);
 
-        if(authInfo?.accessToken){
+        if(authInfo?.accessToken || localStorage.getItem('accessToken')){
             console.log('verified.');
             return(
                 children

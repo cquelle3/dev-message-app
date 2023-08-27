@@ -31,7 +31,7 @@ function App() {
 
         if(res?.status === 200){
           let resInfo = res?.data?.verified;
-          setAuthInfo({ username: resInfo.username, userId: resInfo.userId, accessToken: resInfo.accessToken });
+          setAuthInfo({ username: resInfo.username, userId: resInfo.userId, accessToken: accessToken });
         }
       }
     };

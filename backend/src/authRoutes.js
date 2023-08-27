@@ -36,7 +36,7 @@ router.post('/login', async function(req, res) {
     }
 
     const signObj = {
-        id: user.id,
+        userId: user.id,
         email: user.email,
         username: user.username,
         password: user.password

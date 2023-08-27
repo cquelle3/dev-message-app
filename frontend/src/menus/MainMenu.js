@@ -16,12 +16,15 @@ function MainMenu() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(true);
-  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(authInfo?.accessToken);
 
   useEffect(() => {
     const accessToken = authInfo?.accessToken;
     const userId = authInfo?.userId;    
-  });
+
+    console.log(accessToken);
+    console.log(userId);
+  }, [authInfo]);
 
   function logout(){
     localStorage.removeItem('accessToken');
