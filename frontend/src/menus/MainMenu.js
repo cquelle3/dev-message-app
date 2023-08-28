@@ -4,8 +4,9 @@ import { BsSend } from "react-icons/bs";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
+import axios from "axios";
 
-const baseURL = "http://localhost:3001/api";
+const USER_DATA_URL = "http://localhost:3001/api/userData";
 
 function MainMenu() {
 
@@ -16,14 +17,28 @@ function MainMenu() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(true);
-  const [userId, setUserId] = useState(authInfo?.accessToken);
+  const [userData, setUserData] = useState(authInfo?.accessToken);
 
   useEffect(() => {
-    const accessToken = authInfo?.accessToken;
-    const userId = authInfo?.userId;    
 
-    console.log(accessToken);
-    console.log(userId);
+    async function getUserData(){
+
+      if(authInfo?.userId){
+        const userId = authInfo?.userId;    
+    
+        let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`,
+          {
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+
+        console.log(resUserData?.data[0]);
+        setUserData(resUserData?.data[0]);
+      }
+    }
+
+    getUserData();
+    
   }, [authInfo]);
 
   function logout(){
@@ -36,11 +51,20 @@ function MainMenu() {
   return (
     <div className='flex h-screen'>
       {/*SIDEBAR*/}
-      <div className={`h-full bg-red-200 p-5 pt-8 ${open ? 'w-96' : 'w-20'} duration-300`}>
+      <div className={`flex h-full bg-red-200 p-5 pt-8 ${open ? 'w-96' : 'w-20'} duration-300`}>
         
         {/*SIDEBAR TOGGLE*/}
-        <BsList className='text-2xl' onClick={() => setOpen(!open)}></BsList>
+        {/*<BsList className='text-2xl' onClick={() => setOpen(!open)}></BsList>*/}
         
+        {/*SERVER LIST*/}
+        <div className=''>
+          <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+          <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+          <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+          <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+          <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+        </div>
+
         {/*SERVER CHANNELS*/}
         <div className={`${open ? 'visible' : 'invisible'} pt-10`}>
           <div className='flex items-center pb-3 hover:bg-blue-100 rounded'>

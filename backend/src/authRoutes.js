@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
-const { User } = require('./models');
+const { User, UserData } = require('./models');
 
 router.get('/', function(req, res) {
     res.json({
@@ -17,8 +17,13 @@ router.post('/register', async function(req, res) {
     //hash the password
     newUser.password = bcrypt.hashSync(req.body.password, 10);
     //save the new user
-    const saved = await newUser.save();
-    return res.json({ saved: saved });
+    const savedUser = await newUser.save();
+    //create user data for new user
+    var newUserData = new UserData({userId: savedUser._id, servers: []});
+    //save the new users data
+    const savedUserData = await newUserData.save();
+    //return saved user
+    return res.json({ saved: savedUser });
 });
 
 //login to an account

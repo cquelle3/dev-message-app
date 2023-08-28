@@ -25,6 +25,7 @@ function LoginMenu() {
         setErrMsg('');
     }, [username, password]);
 
+    //if user has an access token saved to browser, they are already logged in. navigate to main menu
     useEffect(() => {
         if(localStorage.getItem('accessToken')){
             navigate('/main-menu');
@@ -36,6 +37,7 @@ function LoginMenu() {
         e.preventDefault();
 
         try{
+            //call backend to verify login credentials
             const res = await axios.post(LOGIN_URL, JSON.stringify({username, password}), 
                 {
                     headers: { 'Content-Type': 'application/json' }
@@ -46,6 +48,7 @@ function LoginMenu() {
             setUsername('');
             setPassword('');
 
+            //get jwt access token and user id from backend
             const accessToken = res?.data?.accessToken;
             const userId = res?.data?.userId;
             //store the username, password, and access token in the app's global auth context
