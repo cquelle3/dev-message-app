@@ -14,9 +14,9 @@ const SERVER_URL = "http://localhost:3001/api/server";
 function ServerList({servers, loadServer, addNewServer}) {
   const serverList = []; 
   if(servers) {
-    servers.forEach((server) => {
+    servers.forEach((server, i) => {
       serverList.push(
-        <div className='pb-2'>
+        <div key={i} className='pb-2'>
             <div className='bg-red-100 w-12 h-12 rounded-full' onClick={() => loadServer(server)}></div>
         </div>
       );
@@ -24,7 +24,7 @@ function ServerList({servers, loadServer, addNewServer}) {
   }
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col h-screen px-3 pt-3 bg-red-400'>
       {serverList}
       <div>
         <div className='flex items-center justify-center bg-blue-100 w-12 h-12 rounded-full' onClick={() => addNewServer()}><HiPlus className='text-xl'></HiPlus></div>
@@ -36,43 +36,72 @@ function ServerList({servers, loadServer, addNewServer}) {
 function ChannelList({channels, loadChannel}) {
   const channelList = [];
   if(channels){
-    channels.forEach((channel) => {
-      let channelName = Object.keys(channel)[0];
+    let channelNames = Object.keys(channels);
+    channelNames.forEach((channelName, i) => {
       channelList.push(
-        <div className='flex items-center pb-3 hover:bg-blue-100 rounded' onClick={() => loadChannel(channel)}>
-            <BiHash></BiHash><p className='pl-2 font-medium select-none'>{channelName}</p>
+        <div key={i} className='flex items-center py-2 hover:bg-blue-100 rounded' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
+          <p className='pl-2 font-medium select-none'>{channelName}</p>
         </div>
       );
     });
   }
 
   return (
-    <div className='pt-10`'>
+    <div className='w-56 px-2 pt-4 bg-red-200'>
+      <div className=''>
+        <p className='text-xs font-semibold'>Channels - 1</p>
+      </div>
       {channelList}  
     </div>
   );
 }
 
-function Channel({channelData}) {
+function MemberList({members}) {
+  
+}
+
+function Channel({channelData, sendMessage}) {
   let channelHeader = "";
   const messageList = [];
+  let messageBox = <></>;
+
+  const [message, setMessage] = useState("");
 
   if(channelData){
     //set header name to channel name
-    channelHeader = Object.keys(channelData)[0];
+    channelHeader = channelData?.channelName;
 
     //push messages to array
-    channelData[channelHeader].forEach((message) => {
+    channelData?.messages.forEach((message, i) => {
       messageList.push(
-        <div className='flex items-center pb-6'>
+        <div key={i} className='flex items-center pb-6'>
             <div className='bg-red-100 w-12 h-12 rounded-full'></div>
             <div className='pl-3'>
               <p className='font-medium'>Username</p>
-              <p className='font-medium'>message...</p>
+              <p className='font-medium'>{message}</p>
             </div>
         </div>
       );
     });
+
+    //set messageBox to the message box html
+    messageBox =
+    <div className='flex items-center mt-auto w-full bg-red-200 rounded'>
+      <input 
+        type='text' 
+        spellCheck='false' 
+        placeholder='Message' 
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => { if(e.key === 'Enter') {sendMessage(message); setMessage('');}}}
+        value={message}
+        className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
+      <div className='pl-4 pr-4'>
+        <BsSend className='w-5 h-5'></BsSend>
+      </div>
+    </div>
+  }
+  else{
+    messageBox = <></>
   }
 
   return (
@@ -91,13 +120,7 @@ function Channel({channelData}) {
         </div>
 
         {/*MESSAGE BOX*/}
-        <div className='flex items-center mt-auto w-full bg-red-200 rounded'>
-          <input type='text' spellCheck='false' placeholder='Message' className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
-          <div className='pl-4 pr-4'>
-            <BsSend className='w-5 h-5'></BsSend>
-          </div>
-        </div>
-
+        {messageBox}
       </div>
     </>
   );
@@ -111,7 +134,6 @@ function MainMenu() {
   //used to navigate between routes
   const navigate = useNavigate();
 
-  const [open, setOpen] = useState(true);
   const [userData, setUserData] = useState(null);
   const [server, setServer] = useState(null);
   const [channel, setChannel] = useState(null);
@@ -155,7 +177,7 @@ function MainMenu() {
   //add a new server
   async function addNewServer(){
     //create a new server
-    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: 'test', members: [userData.userId], channels: [{'default': []}] }), 
+    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: 'test', members: [userData.userId], channels: {'default': []} }), 
       {
         headers: { 'Content-Type': 'application/json' }
       }
@@ -179,26 +201,66 @@ function MainMenu() {
     setChannel(channel);
   }
 
+  async function sendMessage(message){
+    let msgList = channel.messages;
+    msgList.push(message);
+    let serverUpdate = server;
+    serverUpdate.channels[channel.channelName] = msgList;
+
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: serverUpdate.channels}), 
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    
+    setServer(serverRes.data);
+    setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
+  }
+
   return (
-    <div className='flex h-screen'>
-      {/*SIDEBAR*/}
-      <div className={`flex h-full bg-red-200 p-5 pt-8 ${open ? 'w-96' : 'w-20'} duration-300`}>
-        
-        {/*SIDEBAR TOGGLE*/}
-        {/*<BsList className='text-2xl' onClick={() => setOpen(!open)}></BsList>*/}
-        
-        {/*SERVER LIST*/}
-        <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
+    <div className='flex'>
 
-        {/*SERVER CHANNELS*/}
-        <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
+      {/*SERVER LIST*/}
+      <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
 
-        {/*LOGOUT BUTTON*/}
-        <button onClick={logout}>logout</button>
+      <div className='flex flex-col h-screen w-screen bg-blue-100'>
+        
+        {/*SERVER HEADER*/}
+        <div className='h-20 bg-blue-500'>
+          
+        </div>
+
+        <div className='flex flex-1 overflow-auto'>
+          {/*CHANNEL SIDEBAR*/}
+          <div className='flex'>
+            {/*SERVER CHANNELS*/}
+            <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
+          </div>
+
+          {/*CHANNEL*/}
+          <div className='flex-1 w-96'>
+            <Channel channelData={channel} sendMessage={sendMessage}></Channel>
+          </div>
+
+
+          {/*MEMBER SIDEBAR*/}
+          <div className='bg-red-200 px-2 pt-4 w-96'>
+
+            {/*MEMBER LIST*/}
+            <div className='pb-2'>
+              <p className='text-xs font-semibold'>Members - 1</p>
+            </div>
+
+            <div className='flex items-center pb-2'>
+                <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
+                <div className='pl-3'>
+                  <p className='font-medium'>Username</p>
+                </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      {/*CHANNEL*/}
-      <Channel channelData={channel}></Channel>
 
     </div>
   );
