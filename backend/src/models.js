@@ -39,4 +39,22 @@ const UserDataSchema = new mongoose.Schema({
 
 const UserData = mongoose.model("UserData", UserDataSchema);
 
-module.exports = { User, UserData };
+/*SERVERS*/
+const ServerSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    members: {
+        type: Array,
+        required: true
+    },
+    channels: {
+        type: Array,
+        required: true
+    }
+});
+
+const Server = mongoose.model("Server", ServerSchema);
+
+module.exports = { User, UserData, Server };

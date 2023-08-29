@@ -33,8 +33,6 @@ router.post('/login', async function(req, res) {
         username: req.body.username
     });
 
-    console.log(user);
-
     //if a user with the given username does not exist, or the password is incorrect, throw an invalid error
     if(!user || !user.comparePassword(req.body.password)) {
         return res.status(401).json({ message: 'Invalid username or password'});

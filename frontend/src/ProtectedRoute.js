@@ -10,13 +10,11 @@ const ProtectedRoute = function({children}) {
         const { authInfo } = useContext(AuthContext);
 
         if(authInfo?.accessToken || localStorage.getItem('accessToken')){
-            console.log('verified.');
             return(
                 children
             );
         }
         else{
-            console.log('not verified.');
             return (
                 <Navigate to='/login' replace />
             );

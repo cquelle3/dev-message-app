@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, UserData } = require('./models');
+const { User, UserData, Server } = require('./models');
 
 router.get('/', function(req, res) {
     res.json({
@@ -72,6 +72,36 @@ router.delete('/userData/:id', async (req, res) => {
     const { id } = req.params;
     const deletedUserData = await UserData.findByIdAndDelete(id);
     return res.status(200).json(deletedUserData);
+});
+
+/***SERVERS***/
+//get server by user id
+router.get('/server/:id', async (req, res) => {
+    const { id } = req.params;
+    const server = await Server.findById(id);
+    return res.status(200).json(server);
+});
+
+//post new server
+router.post('/server', async (req, res) => {
+    const newServer = new Server({ ...req.body });
+    const insertedServer = await newServer.save();
+    return res.status(201).json(insertedServer);
+});
+
+//update existing server
+router.put('/server/:id', async (req, res) => {
+    const { id } = req.params;
+    await Server.updateOne({ _id: id }, req.body);
+    const updatedServer = await Server.findById(id);
+    return res.status(200).json(updatedServer);
+});
+
+//delete user server by id
+router.delete('/server/:id', async (req, res) => {
+    const { id } = req.params;
+    const deletedServer = await Server.findByIdAndDelete(id);
+    return res.status(200).json(deletedServer);
 });
 
 module.exports = router;
