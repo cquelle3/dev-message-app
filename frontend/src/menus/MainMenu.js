@@ -1,4 +1,4 @@
-import { BsSend } from "react-icons/bs";
+import { BsEmojiLaughing, BsEmojiSmile } from "react-icons/bs";
 import { HiPlus } from "react-icons/hi";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -103,6 +103,7 @@ function Channel({channelData, memberData, sendMessage}) {
   let messageBox = <></>;
 
   const [message, setMessage] = useState("");
+  const [showEmojis, setShowEmojis] = useState(false);
 
   if(channelData){
     //set header name to channel name
@@ -135,8 +136,9 @@ function Channel({channelData, memberData, sendMessage}) {
         value={message}
         className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
       <div className='pl-4 pr-4'>
-        {/*<BsSend className='w-5 h-5'></BsSend>*/}
-        <EmojiPicker></EmojiPicker>
+        <div className='p-1 w-8 h-8 hover:bg-slate-500 rounded'>
+          <BsEmojiSmile className='w-full h-full' onClick={() => setShowEmojis(!showEmojis)}></BsEmojiSmile>
+        </div>
       </div>
     </div>
   }
@@ -160,6 +162,7 @@ function Channel({channelData, memberData, sendMessage}) {
         </div>
 
         {/*MESSAGE BOX*/}
+        {showEmojis && <EmojiPicker onEmojiClick={(e) => {setMessage(message + '' + e.emoji); console.log(e)}}></EmojiPicker>}
         {messageBox}
       </div>
     </div>
