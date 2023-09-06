@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import axios from "axios";
 import { socket } from "../Socket/Socket";
+import EmojiPicker from "emoji-picker-react";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
@@ -59,16 +60,17 @@ function ChannelList({channels, loadChannel}) {
   );
 }
 
-function MemberList({members}){
+function MemberList({members, memberData}){
   const memberList = [];
   var membersTitle = "";
   if(members){
     members.forEach((memberId, i) => {
+      let memberUsername = memberData[memberId]?.username;
       memberList.push(
         <div key={i} className='flex items-center pb-2'>
             <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
             <div className='pl-3'>
-              <p className='font-medium'>{memberId}</p>
+              <p className='font-medium'>{memberUsername}</p>
             </div>
         </div>
       )
@@ -89,14 +91,13 @@ function MemberList({members}){
 }
 
 function ServerHeader(){
-
   return (
     <div className='h-20 bg-blue-500'>
     </div>
   )
 }
 
-function Channel({channelData, sendMessage}) {
+function Channel({channelData, memberData, sendMessage}) {
   let channelHeader = "";
   const messageList = [];
   let messageBox = <></>;
@@ -109,12 +110,14 @@ function Channel({channelData, sendMessage}) {
 
     //push messages to array
     channelData?.messages.forEach((message, i) => {
+      let msgUserId = message?.userId;
+      let msgUsername = memberData[msgUserId]?.username;
       messageList.push(
         <div key={i} className='flex items-center pb-6'>
             <div className='bg-red-100 w-12 h-12 rounded-full'></div>
             <div className='pl-3'>
-              <p className='font-medium'>Username</p>
-              <p className='font-medium'>{message}</p>
+              <p className='font-medium'>{msgUsername}</p>
+              <p className='font-medium'>{message?.text}</p>
             </div>
         </div>
       );
@@ -132,7 +135,8 @@ function Channel({channelData, sendMessage}) {
         value={message}
         className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
       <div className='pl-4 pr-4'>
-        <BsSend className='w-5 h-5'></BsSend>
+        {/*<BsSend className='w-5 h-5'></BsSend>*/}
+        <EmojiPicker></EmojiPicker>
       </div>
     </div>
   }
@@ -174,7 +178,9 @@ function MainMenu() {
   const [userData, setUserData] = useState(null);
   const [server, setServer] = useState(null);
   const [channel, setChannel] = useState(null);
+  const [memberData, setMemberData] = useState(null);
 
+  /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
     function onConnect() {
       console.log('connected to socket.io');
@@ -231,7 +237,7 @@ function MainMenu() {
             headers: { 'Content-Type': 'application/json' }
           }
         );
-        setUserData(resUserData?.data[0]);
+        setUserData(resUserData?.data);
       }
     }
     getUserData();
@@ -252,7 +258,22 @@ function MainMenu() {
         headers: { 'Content-Type': 'application/json' }
       }
     );
+    
+    //get server members data
+    let newMemberData = {};
+    for(let memberId of res?.data.members){
+      let memberRes = await axios.get(`${USER_DATA_URL}/${memberId}`,
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
 
+      newMemberData[memberId] = memberRes?.data;
+    }
+
+    console.log(newMemberData);
+
+    setMemberData(newMemberData);
     setServer(res?.data);
     setChannel(null);
   }
@@ -285,12 +306,20 @@ function MainMenu() {
   }
 
   async function sendMessage(message){
+    //create new message object
+    let newMsg = {
+      text: message,
+      userId: userData?.userId,
+      timestamp: new Date(),
+    }
+
+    //push message to message list
     let msgList = channel.messages;
-    msgList.push(message);
+    msgList.push(newMsg);
     let serverUpdate = server;
     serverUpdate.channels[channel.channelName] = msgList;
 
-    //save server
+    //save to server
     let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: serverUpdate.channels}), 
       {
         headers: { 'Content-Type': 'application/json' }
@@ -298,7 +327,7 @@ function MainMenu() {
     );
 
     //emit message to socket.io to notify other users
-    socket.emit('message', {message: message, channelName: channel?.channelName, serverId: server?._id});
+    socket.emit('message', {message: newMsg, channelName: channel?.channelName, serverId: server?._id});
   }
 
   return (
@@ -319,10 +348,10 @@ function MainMenu() {
           <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
 
           {/*CHANNEL*/}
-          <Channel channelData={channel} sendMessage={sendMessage}></Channel>
+          <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
 
           {/*MEMBER SIDEBAR*/}
-          <MemberList members={server?.members}></MemberList>    
+          <MemberList members={server?.members} memberData={memberData}></MemberList>    
         </div>
       </div>
     </div>

@@ -49,7 +49,11 @@ router.delete('/users/:id', async (req, res) => {
 router.get('/userData/:userId', async (req, res) => {
     const { userId } = req.params;
     const userData = await UserData.find({userId: userId});
-    return res.status(200).json(userData);
+    //get username and add it to user data object
+    const user = await User.findById(userId);
+    let retData = userData[0].toObject();
+    retData['username'] = user.username;
+    return res.status(200).json(retData);
 });
 
 //post new user data for user
