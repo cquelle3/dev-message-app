@@ -1,15 +1,13 @@
-import { BsList } from "react-icons/bs";
-import { BiHash } from "react-icons/bi";
 import { BsSend } from "react-icons/bs";
 import { HiPlus } from "react-icons/hi";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import axios from "axios";
+import { socket } from "../Socket/Socket";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
-
 
 function ServerList({servers, loadServer, addNewServer}) {
   const serverList = []; 
@@ -35,6 +33,7 @@ function ServerList({servers, loadServer, addNewServer}) {
 
 function ChannelList({channels, loadChannel}) {
   const channelList = [];
+  var channelsTitle = "";
   if(channels){
     let channelNames = Object.keys(channels);
     channelNames.forEach((channelName, i) => {
@@ -44,20 +43,57 @@ function ChannelList({channels, loadChannel}) {
         </div>
       );
     });
+
+    channelsTitle = `Channels - ${Object.keys(channels)?.length}`;
   }
 
   return (
-    <div className='w-56 px-2 pt-4 bg-red-200'>
-      <div className=''>
-        <p className='text-xs font-semibold'>Channels - 1</p>
+    <div className='flex'>
+      <div className='w-56 px-2 pt-4 bg-red-200'>
+        <div className=''>
+          <p className='text-xs font-semibold'>{channelsTitle}</p>
+        </div>
+        {channelList}  
       </div>
-      {channelList}  
     </div>
   );
 }
 
-function MemberList({members}) {
-  
+function MemberList({members}){
+  const memberList = [];
+  var membersTitle = "";
+  if(members){
+    members.forEach((memberId, i) => {
+      memberList.push(
+        <div key={i} className='flex items-center pb-2'>
+            <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
+            <div className='pl-3'>
+              <p className='font-medium'>{memberId}</p>
+            </div>
+        </div>
+      )
+    });
+
+    membersTitle = `Members - ${members?.length}`;
+  }
+
+  return (
+    <div className='bg-red-200 px-2 pt-4 w-96'>
+      {/*MEMBER LIST*/}
+      <div className='pb-2'>
+        <p className='text-xs font-semibold'>{membersTitle}</p>
+      </div>
+      {memberList}
+    </div>
+  );
+}
+
+function ServerHeader(){
+
+  return (
+    <div className='h-20 bg-blue-500'>
+    </div>
+  )
 }
 
 function Channel({channelData, sendMessage}) {
@@ -105,7 +141,7 @@ function Channel({channelData, sendMessage}) {
   }
 
   return (
-    <>
+    <div className='flex-1 w-96'>
       <div className='flex flex-col p-7 w-full h-full bg-blue-100'>
         {/*CONTENT OF THE CHANNEL*/}
 
@@ -122,7 +158,7 @@ function Channel({channelData, sendMessage}) {
         {/*MESSAGE BOX*/}
         {messageBox}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -134,9 +170,56 @@ function MainMenu() {
   //used to navigate between routes
   const navigate = useNavigate();
 
+  const [isConnected, setIsConnected] = useState(socket.connected);
   const [userData, setUserData] = useState(null);
   const [server, setServer] = useState(null);
   const [channel, setChannel] = useState(null);
+
+  useEffect(() => {
+    function onConnect() {
+      console.log('connected to socket.io');
+      setIsConnected(true);
+    }
+
+    function onDisconnect() {
+      console.log('disconnected from socket.io');
+      setIsConnected(false);
+    }
+
+    function onMessage(value){
+      console.log(value);
+    }
+
+    async function onMessageResponse(data){
+      console.log('got message');
+      
+      console.log(server);
+      console.log(data);
+
+      if(server?._id === data?.serverId){
+        console.log('refreshing server');
+        let serverRes = await axios.get(`${SERVER_URL}/${server?._id}`, 
+          {
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        setServer(serverRes?.data);
+        setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
+      }
+    }
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('message', onMessage);
+    socket.on('messageResponse', onMessageResponse);
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('message', onMessage);
+      socket.off('messageResponse', onMessageResponse);
+    }
+  });
 
   //get user data when initializing
   useEffect(() => {
@@ -177,7 +260,7 @@ function MainMenu() {
   //add a new server
   async function addNewServer(){
     //create a new server
-    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: 'test', members: [userData.userId], channels: {'default': []} }), 
+    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: 'test', members: [userData.userId], channels: {'general': []} }), 
       {
         headers: { 'Content-Type': 'application/json' }
       }
@@ -207,14 +290,15 @@ function MainMenu() {
     let serverUpdate = server;
     serverUpdate.channels[channel.channelName] = msgList;
 
+    //save server
     let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: serverUpdate.channels}), 
       {
         headers: { 'Content-Type': 'application/json' }
       }
     );
-    
-    setServer(serverRes.data);
-    setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
+
+    //emit message to socket.io to notify other users
+    socket.emit('message', {message: message, channelName: channel?.channelName, serverId: server?._id});
   }
 
   return (
@@ -223,45 +307,24 @@ function MainMenu() {
       {/*SERVER LIST*/}
       <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
 
+      {/*SERVER*/}
       <div className='flex flex-col h-screen w-screen bg-blue-100'>
         
         {/*SERVER HEADER*/}
-        <div className='h-20 bg-blue-500'>
-          
-        </div>
+        <ServerHeader></ServerHeader>
 
+        {/*SERVER CONTENT*/}
         <div className='flex flex-1 overflow-auto'>
           {/*CHANNEL SIDEBAR*/}
-          <div className='flex'>
-            {/*SERVER CHANNELS*/}
-            <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
-          </div>
+          <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
 
           {/*CHANNEL*/}
-          <div className='flex-1 w-96'>
-            <Channel channelData={channel} sendMessage={sendMessage}></Channel>
-          </div>
-
+          <Channel channelData={channel} sendMessage={sendMessage}></Channel>
 
           {/*MEMBER SIDEBAR*/}
-          <div className='bg-red-200 px-2 pt-4 w-96'>
-
-            {/*MEMBER LIST*/}
-            <div className='pb-2'>
-              <p className='text-xs font-semibold'>Members - 1</p>
-            </div>
-
-            <div className='flex items-center pb-2'>
-                <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
-                <div className='pl-3'>
-                  <p className='font-medium'>Username</p>
-                </div>
-            </div>
-          </div>
+          <MemberList members={server?.members}></MemberList>    
         </div>
-
       </div>
-
     </div>
   );
 }

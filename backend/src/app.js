@@ -11,6 +11,15 @@ require('dotenv').config();
 const app = express();
 const PORT = 3001;
 
+//socket.io setup
+const http = require('http').Server(app);
+const { Server } = require('socket.io');
+const io = require('socket.io')(http, {
+    cors: {
+        origin: 'http://localhost:3000'
+    }
+});
+
 app.use(cors({
     origin: 'http://localhost:3000'
 }));
@@ -18,6 +27,19 @@ app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.send('Hello from the server!');
+});
+
+io.on('connection', (socket) => {
+    console.log(`${socket.id} user just connected`);
+
+    socket.on('disconnect', () => {
+    console.log('a user disconnected');
+    });
+
+    socket.on('message', (data) => {
+        console.log(data);
+        io.emit('messageResponse', data);
+    });
 });
 
 //use routes in apiRoutes.js 
@@ -34,7 +56,7 @@ const start = async () => {
         );
 
         //start server
-        app.listen(PORT, (error) => {
+        http.listen(PORT, (error) => {
             if(!error) console.log(`Server running on port ${PORT}`);
             else console.log("Error occurred, server can't start", error);
         });
