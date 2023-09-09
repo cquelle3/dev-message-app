@@ -1,4 +1,5 @@
-import { BsEmojiLaughing, BsEmojiSmile } from "react-icons/bs";
+import { BsEmojiSmile, BsFillPersonPlusFill } from "react-icons/bs";
+import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -6,6 +7,8 @@ import { AuthContext } from "../App";
 import axios from "axios";
 import { socket } from "../Socket/Socket";
 import EmojiPicker from "emoji-picker-react";
+import InviteModal from "../modals/InviteModal";
+import PendingInvitesModal from "../modals/PendingInvites";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
@@ -54,7 +57,7 @@ function ChannelList({channels, loadChannel}) {
         <div className=''>
           <p className='text-xs font-semibold'>{channelsTitle}</p>
         </div>
-        {channelList}  
+        {channelList} 
       </div>
     </div>
   );
@@ -90,10 +93,29 @@ function MemberList({members, memberData}){
   );
 }
 
-function ServerHeader(){
+function ServerHeader({server, inviteUser, openInvites, logout}){
+
+  const [openDropdown, setOpenDropdown] = useState(false);
+
   return (
-    <div className='h-20 bg-blue-500'>
+    <>
+    <div className='flex h-20 w-full'>
+      {/*SERVER HEADER*/}
+      <div className='flex items-center w-full p-5 bg-blue-400'>
+        <h1 className='text-2xl font-semibold'>{server?.name}</h1>
+
+        <button onClick={logout}>logout</button>
+
+        <div className='ml-auto' onClick={() => openInvites()}>
+          <FiMail className='text-2xl'></FiMail>
+        </div>
+
+        {server && <div className='pl-10' onClick={() => inviteUser()}>
+          <BsFillPersonPlusFill className='text-2xl'></BsFillPersonPlusFill>
+        </div>}
+      </div>
     </div>
+    </>
   )
 }
 
@@ -104,6 +126,13 @@ function Channel({channelData, memberData, sendMessage}) {
 
   const [message, setMessage] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
+
+  function handleEmoji(e){
+    let emoji = e.emoji;
+    let newMsg = message + '' + emoji;
+    setMessage(newMsg);
+    setShowEmojis(false);
+  }
 
   if(channelData){
     //set header name to channel name
@@ -147,13 +176,13 @@ function Channel({channelData, memberData, sendMessage}) {
   }
 
   return (
-    <div className='flex-1 w-96'>
+    <div className='relative flex-1 w-96'>
       <div className='flex flex-col p-7 w-full h-full bg-blue-100'>
         {/*CONTENT OF THE CHANNEL*/}
 
-        {/*CONTENT HEADER*/}
-        <div className='border-solid border-b-2 border-red-200'>
-          <h1 className='text-2xl font-semibold pb-4'>{channelHeader}</h1>
+        {/*CHANNEL TITLE*/}
+        <div className='border-b-4 border-blue-500 pb-2'>
+          <h1 className='text-2xl font-semibold'>{channelHeader}</h1>
         </div>
 
         {/*MESSAGES*/}
@@ -162,7 +191,11 @@ function Channel({channelData, memberData, sendMessage}) {
         </div>
 
         {/*MESSAGE BOX*/}
-        {showEmojis && <EmojiPicker onEmojiClick={(e) => {setMessage(message + '' + e.emoji); console.log(e)}}></EmojiPicker>}
+        {showEmojis && 
+          <div className='absolute right-7 bottom-20'>
+            <EmojiPicker onEmojiClick={(e) => {handleEmoji(e)}}></EmojiPicker>
+          </div>
+        }
         {messageBox}
       </div>
     </div>
@@ -182,6 +215,8 @@ function MainMenu() {
   const [server, setServer] = useState(null);
   const [channel, setChannel] = useState(null);
   const [memberData, setMemberData] = useState(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showPendingInvModal, setShowPendingInvModal] = useState(false);
 
   /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
@@ -333,31 +368,52 @@ function MainMenu() {
     socket.emit('message', {message: newMsg, channelName: channel?.channelName, serverId: server?._id});
   }
 
+  function inviteUser(){
+    console.log('inviting...');
+    setShowInviteModal(true);
+  }
+
+  function acceptInvite(serverId){
+    console.log(serverId);
+    if(!userData.servers.findIndex((id) => id === serverId)){
+      userData.servers.push(serverId);
+    }
+    delete userData.invites[serverId];
+
+    //servers.push(serverId);
+    //setUserData
+  }
+
   return (
-    <div className='flex'>
+    <>
+      <div className='flex'>
 
-      {/*SERVER LIST*/}
-      <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
+        {/*SERVER LIST*/}
+        <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
 
-      {/*SERVER*/}
-      <div className='flex flex-col h-screen w-screen bg-blue-100'>
-        
-        {/*SERVER HEADER*/}
-        <ServerHeader></ServerHeader>
+        {/*SERVER*/}
+        <div className='flex flex-col h-screen w-screen bg-blue-100'>
+          
+          {/*SERVER HEADER*/}
+          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} logout={logout}></ServerHeader>
 
-        {/*SERVER CONTENT*/}
-        <div className='flex flex-1 overflow-auto'>
-          {/*CHANNEL SIDEBAR*/}
-          <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
+          {/*SERVER CONTENT*/}
+          <div className='flex flex-1 overflow-auto'>
+            {/*CHANNEL SIDEBAR*/}
+            <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
 
-          {/*CHANNEL*/}
-          <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
+            {/*CHANNEL*/}
+            <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
 
-          {/*MEMBER SIDEBAR*/}
-          <MemberList members={server?.members} memberData={memberData}></MemberList>    
+            {/*MEMBER SIDEBAR*/}
+            <MemberList members={server?.members} memberData={memberData}></MemberList>    
+          </div>
         </div>
       </div>
-    </div>
+
+      <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData}></InviteModal>
+      <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
+    </>
   );
 }
 

@@ -34,6 +34,11 @@ const UserDataSchema = new mongoose.Schema({
     servers: {
         type: Array,
         required: true
+    },
+    invites: {
+        type: Object,
+        default: {},
+        required: true
     }
 });
 

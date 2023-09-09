@@ -3,6 +3,7 @@ import MainMenu from './menus/MainMenu';
 import LoginMenu from './menus/LoginMenu';
 import CreateAccountMenu from './menus/CreateAccountMenu';
 import ProtectedRoute from './ProtectedRoute';
+import InviteModal from './modals/InviteModal';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';

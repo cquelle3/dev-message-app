@@ -22,6 +22,13 @@ router.get('/users/:id', async (req, res) => {
     return res.status(200).json(user);
 });
 
+//search users by username
+router.get('/users/search/:username', async (req, res) => {
+    const { username } = req.params;
+    const users = await User.find({username: {$regex: username} });
+    return res.status(200).json(users);
+});
+
 //post new user
 router.post('/users', async (req, res) => {
     const newUser = new User({ ...req.body });

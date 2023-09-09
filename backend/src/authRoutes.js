@@ -19,7 +19,7 @@ router.post('/register', async function(req, res) {
     //save the new user
     const savedUser = await newUser.save();
     //create user data for new user
-    var newUserData = new UserData({userId: savedUser._id, servers: []});
+    var newUserData = new UserData({userId: savedUser._id, servers: [], invites: {}});
     //save the new users data
     const savedUserData = await newUserData.save();
     //return saved user
