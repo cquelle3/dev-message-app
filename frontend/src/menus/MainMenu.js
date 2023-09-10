@@ -1,6 +1,7 @@
 import { BsEmojiSmile, BsFillPersonPlusFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
+import { AiOutlinePlusCircle } from "react-icons/ai";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
@@ -10,6 +11,7 @@ import EmojiPicker from "emoji-picker-react";
 import InviteModal from "../modals/InviteModal";
 import PendingInvitesModal from "../modals/PendingInvites";
 import CreateServerModal from "../modals/CreateServerModal";
+import CreateChannelModal from "../modals/CreateChannelModal";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
@@ -36,9 +38,10 @@ function ServerList({servers, loadServer, createServer}) {
   );
 }
 
-function ChannelList({channels, loadChannel}) {
+function ChannelList({channels, loadChannel, createChannel}) {
   const channelList = [];
   var channelsTitle = "";
+  var addChannelButton = <></>;
   if(channels){
     let channelNames = Object.keys(channels);
     channelNames.forEach((channelName, i) => {
@@ -50,13 +53,19 @@ function ChannelList({channels, loadChannel}) {
     });
 
     channelsTitle = `Channels - ${Object.keys(channels)?.length}`;
+    addChannelButton = <AiOutlinePlusCircle className='text-2xl' onClick={() => createChannel()}></AiOutlinePlusCircle>;
   }
 
   return (
     <div className='flex'>
       <div className='w-56 px-2 pt-4 bg-red-200'>
-        <div className=''>
-          <p className='text-xs font-semibold'>{channelsTitle}</p>
+        <div className='flex items-center'>
+          <div className=''>
+            <p className='text-xs font-semibold'>{channelsTitle}</p>
+          </div>
+          <div className='pl-4 pb-3'>
+            {addChannelButton}
+          </div>
         </div>
         {channelList} 
       </div>
@@ -219,6 +228,7 @@ function MainMenu() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPendingInvModal, setShowPendingInvModal] = useState(false);
   const [showCreateServModal, setShowCreateServModal] = useState(false);
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
 
   /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
@@ -371,6 +381,22 @@ function MainMenu() {
     setChannel(channel);
   }
 
+  async function addNewChannel(channelName){
+    let currChannels = server?.channels;
+    currChannels[channelName] = [];
+
+    console.log(currChannels);
+
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), 
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    //refresh server for other members
+    socket.emit('refreshServer', {serverId: server._id});
+  }
+
   async function sendMessage(message){
     //create new message object
     let newMsg = {
@@ -460,7 +486,7 @@ function MainMenu() {
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>
             {/*CHANNEL SIDEBAR*/}
-            <ChannelList channels={server?.channels} loadChannel={loadChannel}></ChannelList>
+            <ChannelList channels={server?.channels} loadChannel={loadChannel} createChannel={() => setShowCreateChannelModal(true)}></ChannelList>
 
             {/*CHANNEL*/}
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
@@ -474,6 +500,7 @@ function MainMenu() {
       <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData} socket={socket}></InviteModal>
       <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
       <CreateServerModal show={showCreateServModal} onHide={() => setShowCreateServModal(false)} addNewServer={addNewServer}></CreateServerModal>
+      <CreateChannelModal show={showCreateChannelModal} onHide={() => setShowCreateChannelModal(false)} server={server} addNewChannel={addNewChannel}></CreateChannelModal>
     </>
   );
 }
