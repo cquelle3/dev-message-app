@@ -237,11 +237,6 @@ function MainMenu() {
     }
 
     async function onMessageResponse(data){
-      console.log('got message');
-      
-      console.log(server);
-      console.log(data);
-
       if(server?._id === data?.serverId){
         console.log('refreshing server');
         let serverRes = await axios.get(`${SERVER_URL}/${server?._id}`, 
@@ -256,16 +251,31 @@ function MainMenu() {
       }
     }
 
+    async function onRefreshServerResponse(data){
+      if(server?._id === data?.serverId){
+        let chanName = "";
+        if(channel){
+          chanName = channel.channelName;
+        }
+        await loadServer(server?._id);
+        if(chanName !== ""){
+          setChannel({ channelName: chanName, messages: server.channels[chanName] });
+        }
+      }
+    }
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
     socket.on('messageResponse', onMessageResponse);
+    socket.on('refreshServerResponse', onRefreshServerResponse);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
       socket.off('messageResponse', onMessageResponse);
+      socket.off('refreshServerResponse', onRefreshServerResponse);
     }
   });
 
@@ -415,6 +425,9 @@ function MainMenu() {
 
     //assign current users data to updated data
     setUserData(userDataUpd?.data);
+
+    //refresh server for other members
+    socket.emit('refreshServer', {serverId: serverId});
   }
 
   return (
