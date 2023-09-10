@@ -9,11 +9,12 @@ import { socket } from "../Socket/Socket";
 import EmojiPicker from "emoji-picker-react";
 import InviteModal from "../modals/InviteModal";
 import PendingInvitesModal from "../modals/PendingInvites";
+import CreateServerModal from "../modals/CreateServerModal";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
 
-function ServerList({servers, loadServer, addNewServer}) {
+function ServerList({servers, loadServer, createServer}) {
   const serverList = []; 
   if(servers) {
     servers.forEach((server, i) => {
@@ -29,7 +30,7 @@ function ServerList({servers, loadServer, addNewServer}) {
     <div className='flex flex-col h-screen px-3 pt-3 bg-red-400'>
       {serverList}
       <div>
-        <div className='flex items-center justify-center bg-blue-100 w-12 h-12 rounded-full' onClick={() => addNewServer()}><HiPlus className='text-xl'></HiPlus></div>
+        <div className='flex items-center justify-center bg-blue-100 w-12 h-12 rounded-full' onClick={() => createServer()}><HiPlus className='text-xl'></HiPlus></div>
       </div>
     </div>
   );
@@ -217,6 +218,7 @@ function MainMenu() {
   const [memberData, setMemberData] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPendingInvModal, setShowPendingInvModal] = useState(false);
+  const [showCreateServModal, setShowCreateServModal] = useState(false);
 
   /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
@@ -248,7 +250,9 @@ function MainMenu() {
           }
         );
         setServer(serverRes?.data);
-        setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
+        if(channel?.channelName === data.channelName){
+          setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
+        }
       }
     }
 
@@ -317,9 +321,9 @@ function MainMenu() {
   }
 
   //add a new server
-  async function addNewServer(){
+  async function addNewServer(serverName){
     //create a new server
-    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: 'test', members: [userData.userId], channels: {'general': []} }), 
+    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: serverName, members: [userData.userId], channels: {'general': []} }), 
       {
         headers: { 'Content-Type': 'application/json' }
       }
@@ -373,15 +377,44 @@ function MainMenu() {
     setShowInviteModal(true);
   }
 
-  function acceptInvite(serverId){
-    console.log(serverId);
-    if(!userData.servers.findIndex((id) => id === serverId)){
-      userData.servers.push(serverId);
-    }
-    delete userData.invites[serverId];
+  async function acceptInvite(serverId){
+    let currServers = userData.servers;
+    let currInvites = userData.invites;
 
-    //servers.push(serverId);
-    //setUserData
+    //if the user does not have the server in their list already, add it to server list
+    if(currServers.findIndex((id) => id === serverId) === -1){
+      currServers.push(serverId);
+    }
+    //delete invite
+    delete currInvites[serverId];
+
+    //save user changes
+    let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({servers: currServers, invites: currInvites}), 
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    //pull server user was invited to 
+    let serverRes = await axios.get(`${SERVER_URL}/${serverId}`, 
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    //update server members to add new user
+    let mems = serverRes?.data.members;
+    if(mems.findIndex((id) => id === userData.userId) === -1){
+      mems.push(userData.userId);
+    }
+    let serverUpd = await axios.put(`${SERVER_URL}/${serverId}`, JSON.stringify({members: mems}),
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    //assign current users data to updated data
+    setUserData(userDataUpd?.data);
   }
 
   return (
@@ -389,7 +422,7 @@ function MainMenu() {
       <div className='flex'>
 
         {/*SERVER LIST*/}
-        <ServerList servers={userData?.servers} loadServer={loadServer} addNewServer={addNewServer}></ServerList>
+        <ServerList servers={userData?.servers} loadServer={loadServer} createServer={() => setShowCreateServModal(true)}></ServerList>
 
         {/*SERVER*/}
         <div className='flex flex-col h-screen w-screen bg-blue-100'>
@@ -413,6 +446,7 @@ function MainMenu() {
 
       <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData}></InviteModal>
       <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
+      <CreateServerModal show={showCreateServModal} onHide={() => setShowCreateServModal(false)} addNewServer={addNewServer}></CreateServerModal>
     </>
   );
 }

@@ -18,6 +18,8 @@ function InviteModal(props){
                 headers: { 'Content-Type': 'application/json' }
             }
         ); 
+
+        console.log(res);
         
         let invites = res.data.invites;
         if(invites === undefined){
@@ -28,11 +30,13 @@ function InviteModal(props){
             invites[props.server._id] = props.currUserData.username;
         }
     
-        let resUpd = await axios.put(`${USER_DATA_URL}/${props.currUserData._id}`, JSON.stringify({invites: invites}), 
+        let resUpd = await axios.put(`${USER_DATA_URL}/${res.data._id}`, JSON.stringify({invites: invites}), 
             {
                 headers: { 'Content-Type': 'application/json' }
             }
         );
+
+        console.log(resUpd);
     }
 
     //search for users
