@@ -264,11 +264,24 @@ function MainMenu() {
       }
     }
 
+    async function onRefreshUserData(data){
+      console.log('refreshing user data');
+      if(userData?.userId === data?.userId){  
+        let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`,
+          {
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        setUserData(resUserData?.data);
+      }
+    }
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
     socket.on('messageResponse', onMessageResponse);
     socket.on('refreshServerResponse', onRefreshServerResponse);
+    socket.on('refreshUserDataResponse', onRefreshUserData);
 
     return () => {
       socket.off('connect', onConnect);
@@ -276,12 +289,13 @@ function MainMenu() {
       socket.off('message', onMessage);
       socket.off('messageResponse', onMessageResponse);
       socket.off('refreshServerResponse', onRefreshServerResponse);
+      socket.off('refreshUserDataResponse', onRefreshUserData);
     }
   });
 
   //get user data when initializing
   useEffect(() => {
-    async function getUserData(){
+    async function getUserDataAuth(){
       if(authInfo?.userId){
         const userId = authInfo?.userId;    
         let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`,
@@ -292,7 +306,7 @@ function MainMenu() {
         setUserData(resUserData?.data);
       }
     }
-    getUserData();
+    getUserDataAuth();
   }, [authInfo]);
 
   //logout of account by clearing tokens and auth info
@@ -457,7 +471,7 @@ function MainMenu() {
         </div>
       </div>
 
-      <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData}></InviteModal>
+      <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData} socket={socket}></InviteModal>
       <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
       <CreateServerModal show={showCreateServModal} onHide={() => setShowCreateServModal(false)} addNewServer={addNewServer}></CreateServerModal>
     </>

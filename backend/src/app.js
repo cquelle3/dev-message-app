@@ -45,6 +45,11 @@ io.on('connection', (socket) => {
         console.log(data);
         io.emit('refreshServerResponse', data);
     });
+
+    socket.on('refreshUserData', (data) => {
+        console.log(data);
+        io.emit('refreshUserDataResponse', data);
+    });
 });
 
 //use routes in apiRoutes.js 

@@ -36,7 +36,8 @@ function InviteModal(props){
             }
         );
 
-        console.log(resUpd);
+        //refresh user data for invited user
+        props.socket.emit('refreshUserData', {userId: user._id});
     }
 
     //search for users
