@@ -2,6 +2,7 @@ import { BsEmojiSmile, BsFillPersonPlusFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
+import { IoMdSettings } from "react-icons/io";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
@@ -22,17 +23,17 @@ function ServerList({servers, loadServer, createServer}) {
     servers.forEach((server, i) => {
       serverList.push(
         <div key={i} className='pb-2'>
-            <div className='bg-red-100 w-12 h-12 rounded-full' onClick={() => loadServer(server)}></div>
+            <div className='bg-red-100 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
         </div>
       );
     });
   }
 
   return (
-    <div className='flex flex-col h-screen px-3 pt-3 bg-red-400'>
+    <div className='flex flex-col h-screen px-3 pt-3 bg-slate-900'>
       {serverList}
       <div>
-        <div className='flex items-center justify-center bg-blue-100 w-12 h-12 rounded-full' onClick={() => createServer()}><HiPlus className='text-xl'></HiPlus></div>
+        <div className='flex items-center justify-center bg-slate-700 w-12 h-12 rounded-full cursor-pointer' onClick={() => createServer()}><HiPlus className='text-xl text-slate-100'></HiPlus></div>
       </div>
     </div>
   );
@@ -46,22 +47,22 @@ function ChannelList({channels, loadChannel, createChannel}) {
     let channelNames = Object.keys(channels);
     channelNames.forEach((channelName, i) => {
       channelList.push(
-        <div key={i} className='flex items-center py-2 hover:bg-blue-100 rounded' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
-          <p className='pl-2 font-medium select-none'>{channelName}</p>
+        <div key={i} className='flex items-center pt-2.5 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
+          <p className='pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
         </div>
       );
     });
 
     channelsTitle = `Channels - ${Object.keys(channels)?.length}`;
-    addChannelButton = <AiOutlinePlusCircle className='text-2xl' onClick={() => createChannel()}></AiOutlinePlusCircle>;
+    addChannelButton = <AiOutlinePlusCircle className='text-2xl text-slate-100 cursor-pointer' onClick={() => createChannel()}></AiOutlinePlusCircle>;
   }
 
   return (
     <div className='flex'>
-      <div className='w-56 px-2 pt-4 bg-red-200'>
+      <div className='w-56 px-2 pt-4 bg-slate-700'>
         <div className='flex items-center'>
           <div className=''>
-            <p className='text-xs font-semibold'>{channelsTitle}</p>
+            <p className='text-xs font-semibold text-slate-100 select-none'>{channelsTitle}</p>
           </div>
           <div className='pl-4 pb-3'>
             {addChannelButton}
@@ -80,10 +81,10 @@ function MemberList({members, memberData}){
     members.forEach((memberId, i) => {
       let memberUsername = memberData[memberId]?.username;
       memberList.push(
-        <div key={i} className='flex items-center pb-2'>
-            <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
-            <div className='pl-3'>
-              <p className='font-medium'>{memberUsername}</p>
+        <div key={i} className='flex items-center px-2 hover:bg-slate-600 rounded'>
+            <div className='bg-blue-100 w-10 h-10 rounded-full select-none'></div>
+            <div className='pl-3 pt-3'>
+              <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
             </div>
         </div>
       )
@@ -93,10 +94,10 @@ function MemberList({members, memberData}){
   }
 
   return (
-    <div className='bg-red-200 px-2 pt-4 w-96'>
+    <div className='bg-slate-700 px-2 pt-4 w-96'>
       {/*MEMBER LIST*/}
       <div className='pb-2'>
-        <p className='text-xs font-semibold'>{membersTitle}</p>
+        <p className='text-xs font-semibold text-slate-100 select-none'>{membersTitle}</p>
       </div>
       {memberList}
     </div>
@@ -111,17 +112,21 @@ function ServerHeader({server, inviteUser, openInvites, logout}){
     <>
     <div className='flex h-20 w-full'>
       {/*SERVER HEADER*/}
-      <div className='flex items-center w-full p-5 bg-blue-400'>
-        <h1 className='text-2xl font-semibold'>{server?.name}</h1>
+      <div className='flex items-center w-full p-5 bg-slate-800'>
+        <h1 className='text-2xl font-semibold text-slate-100 select-none'>{server?.name}</h1>
 
-        <button onClick={logout}>logout</button>
+        <button className='text-slate-100' onClick={logout}>logout</button>
 
-        <div className='ml-auto' onClick={() => openInvites()}>
-          <FiMail className='text-2xl'></FiMail>
+        <div className='ml-auto'>
+          <IoMdSettings className='text-2xl text-slate-100 cursor-pointer'></IoMdSettings>
         </div>
 
-        {server && <div className='pl-10' onClick={() => inviteUser()}>
-          <BsFillPersonPlusFill className='text-2xl'></BsFillPersonPlusFill>
+        <div className='pl-10' onClick={() => openInvites()}>
+          <FiMail className='text-2xl text-slate-100 cursor-pointer'></FiMail>
+        </div>
+
+        {server && <div className='pl-10'>
+          <BsFillPersonPlusFill className='text-2xl text-slate-100 cursor-pointer' onClick={() => inviteUser()}></BsFillPersonPlusFill>
         </div>}
       </div>
     </div>
@@ -153,11 +158,11 @@ function Channel({channelData, memberData, sendMessage}) {
       let msgUserId = message?.userId;
       let msgUsername = memberData[msgUserId]?.username;
       messageList.push(
-        <div key={i} className='flex items-center pb-6'>
-            <div className='bg-red-100 w-12 h-12 rounded-full'></div>
+        <div key={i} className='flex pb-6'>
+            <div className='bg-red-100 w-12 h-12 rounded-full select-none'></div>
             <div className='pl-3'>
-              <p className='font-medium'>{msgUsername}</p>
-              <p className='font-medium'>{message?.text}</p>
+              <p className='font-medium text-slate-400 mb-0'>{msgUsername}</p>
+              <p className='font-medium text-slate-100'>{message?.text}</p>
             </div>
         </div>
       );
@@ -165,7 +170,7 @@ function Channel({channelData, memberData, sendMessage}) {
 
     //set messageBox to the message box html
     messageBox =
-    <div className='flex items-center mt-auto w-full bg-red-200 rounded'>
+    <div className='flex items-center mt-auto w-full bg-slate-700 rounded'>
       <input 
         type='text' 
         spellCheck='false' 
@@ -173,10 +178,10 @@ function Channel({channelData, memberData, sendMessage}) {
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={(e) => { if(e.key === 'Enter') {sendMessage(message); setMessage('');}}}
         value={message}
-        className='w-full h-12 p-4 font-medium bg-transparent focus:outline-0'/>
+        className='w-full h-12 p-4 font-medium text-slate-100 bg-transparent focus:outline-0'/>
       <div className='pl-4 pr-4'>
         <div className='p-1 w-8 h-8 hover:bg-slate-500 rounded'>
-          <BsEmojiSmile className='w-full h-full' onClick={() => setShowEmojis(!showEmojis)}></BsEmojiSmile>
+          <BsEmojiSmile className='w-full h-full text-slate-100' onClick={() => setShowEmojis(!showEmojis)}></BsEmojiSmile>
         </div>
       </div>
     </div>
@@ -187,12 +192,12 @@ function Channel({channelData, memberData, sendMessage}) {
 
   return (
     <div className='relative flex-1 w-96'>
-      <div className='flex flex-col p-7 w-full h-full bg-blue-100'>
+      <div className='flex flex-col p-7 w-full h-full bg-slate-500'>
         {/*CONTENT OF THE CHANNEL*/}
 
         {/*CHANNEL TITLE*/}
-        <div className='border-b-4 border-blue-500 pb-2'>
-          <h1 className='text-2xl font-semibold'>{channelHeader}</h1>
+        <div className='border-b-4 border-slate-400 pb-2'>
+          <h1 className='text-2xl font-semibold text-slate-100 select-none'>{channelHeader}</h1>
         </div>
 
         {/*MESSAGES*/}
@@ -246,21 +251,6 @@ function MainMenu() {
       console.log(value);
     }
 
-    async function onMessageResponse(data){
-      if(server?._id === data?.serverId){
-        console.log('refreshing server');
-        let serverRes = await axios.get(`${SERVER_URL}/${server?._id}`, 
-          {
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-        setServer(serverRes?.data);
-        if(channel?.channelName === data.channelName){
-          setChannel({ channelName: channel.channelName, messages: serverRes.data.channels[channel.channelName] });
-        }
-      }
-    }
-
     async function onRefreshServerResponse(data){
       if(server?._id === data?.serverId){
         let chanName = "";
@@ -289,7 +279,6 @@ function MainMenu() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
-    //socket.on('messageResponse', onMessageResponse);
     socket.on('refreshServerResponse', onRefreshServerResponse);
     socket.on('refreshUserDataResponse', onRefreshUserData);
 
@@ -297,7 +286,6 @@ function MainMenu() {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
-      //socket.off('messageResponse', onMessageResponse);
       socket.off('refreshServerResponse', onRefreshServerResponse);
       socket.off('refreshUserDataResponse', onRefreshUserData);
     }
@@ -319,12 +307,11 @@ function MainMenu() {
     getUserDataAuth();
   }, [authInfo]);
 
+  //use effect for setting up message receiving sockets for servers
   useEffect(() => {
     function onMessageResponse(data){
       if(data){
-        console.log(data);
         if(server?._id === data?.serverId && userData?.userId !== data?.message?.userId){
-          console.log('incoming message to server');
           server.channels[data?.channelName].push(data.message);
           if(channel?.channelName === data?.channelName){
             setChannel({ channelName: channel.channelName, messages: server.channels[channel.channelName] });
@@ -333,11 +320,8 @@ function MainMenu() {
       }
     }
 
-    console.log(userData);
-
-    //create sockets for message responses for current server for user
+    //create socket for message responses for current server for user
     if(server){
-      console.log('creating socket');
       socket.on('messageResponse' + server._id, onMessageResponse); 
       return () => socket.off('messageResponse' + server._id, onMessageResponse);
     }
@@ -370,8 +354,6 @@ function MainMenu() {
 
       newMemberData[memberId] = memberRes?.data;
     }
-
-    console.log(newMemberData);
 
     setMemberData(newMemberData);
     setServer(res?.data);
