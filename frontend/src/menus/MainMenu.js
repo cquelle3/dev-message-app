@@ -13,17 +13,28 @@ import InviteModal from "../modals/InviteModal";
 import PendingInvitesModal from "../modals/PendingInvites";
 import CreateServerModal from "../modals/CreateServerModal";
 import CreateChannelModal from "../modals/CreateChannelModal";
+import SettingsModal from "../modals/SettingsModal";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
 
 function ServerList({servers, loadServer, createServer}) {
+
   const serverList = []; 
   if(servers) {
     servers.forEach((server, i) => {
       serverList.push(
         <div key={i} className='pb-2'>
-            <div className='bg-red-100 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
+            <OverlayTrigger placement="right" overlay={
+              <div className='pl-2'>
+                <div className='bg-slate-500 rounded px-2 pb-1'>
+                  <p className='text-slate-100 mb-0'>{server}</p>
+                </div>
+              </div>
+            }>
+              <div className='bg-red-100 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
+            </OverlayTrigger>
         </div>
       );
     });
@@ -33,7 +44,15 @@ function ServerList({servers, loadServer, createServer}) {
     <div className='flex flex-col h-screen px-3 pt-3 bg-slate-900'>
       {serverList}
       <div>
-        <div className='flex items-center justify-center bg-slate-700 w-12 h-12 rounded-full cursor-pointer' onClick={() => createServer()}><HiPlus className='text-xl text-slate-100'></HiPlus></div>
+        <OverlayTrigger placement="right" overlay={
+          <div className='pl-2'>
+            <div className='bg-slate-500 rounded px-2 pb-1'>
+              <p className='text-slate-100 mb-0'>Create Server</p>
+            </div>
+          </div>
+        }>
+          <div className='flex items-center justify-center bg-slate-700 w-12 h-12 rounded-full cursor-pointer' onClick={() => createServer()}><HiPlus className='text-xl text-slate-100'></HiPlus></div>
+        </OverlayTrigger>
       </div>
     </div>
   );
@@ -104,7 +123,7 @@ function MemberList({members, memberData}){
   );
 }
 
-function ServerHeader({server, inviteUser, openInvites, logout}){
+function ServerHeader({server, inviteUser, openInvites, openSettings}){
 
   const [openDropdown, setOpenDropdown] = useState(false);
 
@@ -115,14 +134,12 @@ function ServerHeader({server, inviteUser, openInvites, logout}){
       <div className='flex items-center w-full p-5 bg-slate-800'>
         <h1 className='text-2xl font-semibold text-slate-100 select-none'>{server?.name}</h1>
 
-        <button className='text-slate-100' onClick={logout}>logout</button>
-
         <div className='ml-auto'>
-          <IoMdSettings className='text-2xl text-slate-100 cursor-pointer'></IoMdSettings>
+          <IoMdSettings className='text-2xl text-slate-100 cursor-pointer' onClick={() => openSettings()}></IoMdSettings>
         </div>
 
         <div className='pl-10' onClick={() => openInvites()}>
-          <FiMail className='text-2xl text-slate-100 cursor-pointer'></FiMail>
+          <FiMail className='text-2xl text-slate-100 cursor-pointer' onClick={() => openInvites()}></FiMail>
         </div>
 
         {server && <div className='pl-10'>
@@ -234,6 +251,7 @@ function MainMenu() {
   const [showPendingInvModal, setShowPendingInvModal] = useState(false);
   const [showCreateServModal, setShowCreateServModal] = useState(false);
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
@@ -326,14 +344,6 @@ function MainMenu() {
       return () => socket.off('messageResponse' + server._id, onMessageResponse);
     }
   }, [server, channel, userData]);
-
-  //logout of account by clearing tokens and auth info
-  function logout(){
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userId');
-    setAuthInfo(null);
-    navigate('/login');
-  }
 
   //load the selected server
   async function loadServer(serverId) {
@@ -487,7 +497,7 @@ function MainMenu() {
         <div className='flex flex-col h-screen w-screen bg-blue-100'>
           
           {/*SERVER HEADER*/}
-          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} logout={logout}></ServerHeader>
+          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)}></ServerHeader>
 
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>
@@ -507,6 +517,7 @@ function MainMenu() {
       <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
       <CreateServerModal show={showCreateServModal} onHide={() => setShowCreateServModal(false)} addNewServer={addNewServer}></CreateServerModal>
       <CreateChannelModal show={showCreateChannelModal} onHide={() => setShowCreateChannelModal(false)} server={server} addNewChannel={addNewChannel}></CreateChannelModal>
+      <SettingsModal show={showSettingsModal} onHide={() => setShowSettingsModal(false)} setAuthInfo={setAuthInfo} navigate={navigate}></SettingsModal>
     </>
   );
 }
