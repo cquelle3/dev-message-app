@@ -33,7 +33,7 @@ function ServerList({servers, loadServer, createServer}) {
                 </div>
               </div>
             }>
-              <div className='bg-red-100 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
+              <div className='bg-slate-300 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
             </OverlayTrigger>
         </div>
       );
@@ -101,7 +101,7 @@ function MemberList({members, memberData}){
       let memberUsername = memberData[memberId]?.username;
       memberList.push(
         <div key={i} className='flex items-center px-2 hover:bg-slate-600 rounded'>
-            <div className='bg-blue-100 w-10 h-10 rounded-full select-none'></div>
+            <div className='bg-slate-300 w-10 h-10 rounded-full select-none'></div>
             <div className='pl-3 pt-3'>
               <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
             </div>
@@ -176,7 +176,7 @@ function Channel({channelData, memberData, sendMessage}) {
       let msgUsername = memberData[msgUserId]?.username;
       messageList.push(
         <div key={i} className='flex pb-6'>
-            <div className='bg-red-100 w-12 h-12 rounded-full select-none'></div>
+            <div className='bg-slate-300 w-12 h-12 rounded-full select-none'></div>
             <div className='pl-3'>
               <p className='font-medium text-slate-400 mb-0'>{msgUsername}</p>
               <p className='font-medium text-slate-100'>{message?.text}</p>
@@ -494,7 +494,7 @@ function MainMenu() {
         <ServerList servers={userData?.servers} loadServer={loadServer} createServer={() => setShowCreateServModal(true)}></ServerList>
 
         {/*SERVER*/}
-        <div className='flex flex-col h-screen w-screen bg-blue-100'>
+        <div className='flex flex-col h-screen w-screen'>
           
           {/*SERVER HEADER*/}
           <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)}></ServerHeader>
