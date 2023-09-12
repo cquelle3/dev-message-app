@@ -289,7 +289,7 @@ function MainMenu() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
-    socket.on('messageResponse', onMessageResponse);
+    //socket.on('messageResponse', onMessageResponse);
     socket.on('refreshServerResponse', onRefreshServerResponse);
     socket.on('refreshUserDataResponse', onRefreshUserData);
 
@@ -297,7 +297,7 @@ function MainMenu() {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
-      socket.off('messageResponse', onMessageResponse);
+      //socket.off('messageResponse', onMessageResponse);
       socket.off('refreshServerResponse', onRefreshServerResponse);
       socket.off('refreshUserDataResponse', onRefreshUserData);
     }
@@ -318,6 +318,30 @@ function MainMenu() {
     }
     getUserDataAuth();
   }, [authInfo]);
+
+  useEffect(() => {
+    function onMessageResponse(data){
+      if(data){
+        console.log(data);
+        if(server?._id === data?.serverId && userData?.userId !== data?.message?.userId){
+          console.log('incoming message to server');
+          server.channels[data?.channelName].push(data.message);
+          if(channel?.channelName === data?.channelName){
+            setChannel({ channelName: channel.channelName, messages: server.channels[channel.channelName] });
+          }
+        }
+      }
+    }
+
+    console.log(userData);
+
+    //create sockets for message responses for current server for user
+    if(server){
+      console.log('creating socket');
+      socket.on('messageResponse' + server._id, onMessageResponse); 
+      return () => socket.off('messageResponse' + server._id, onMessageResponse);
+    }
+  }, [server, channel, userData]);
 
   //logout of account by clearing tokens and auth info
   function logout(){
