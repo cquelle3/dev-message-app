@@ -24,10 +24,10 @@ function InviteModal(props){
         let invites = res.data.invites;
         if(invites === undefined){
             invites = {};
-            invites[props.server._id] = props.currUserData.username;
+            invites[props.server._id] = {userName: props.currUserData.username, serverName: props.serverNames[props.server._id]};
         }
         else{
-            invites[props.server._id] = props.currUserData.username;
+            invites[props.server._id] = {userName: props.currUserData.username, serverName: props.serverNames[props.server._id]};//props.currUserData.username;
         }
     
         let resUpd = await axios.put(`${USER_DATA_URL}/${res.data._id}`, JSON.stringify({invites: invites}), 

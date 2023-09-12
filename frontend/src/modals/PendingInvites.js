@@ -14,7 +14,7 @@ function PendingInvitesModal(props){
             inviteList.push(
                 <div key={serverId} className='flex'>
                     <div className=''>
-                        <p className='font-semibold'>{props.currUserData.invites[serverId]} invited you to join {serverId}</p>
+                        <p className='font-semibold'>'{props.currUserData.invites[serverId].userName}' invited you to join '{props.currUserData.invites[serverId].serverName}'</p>
                     </div>
                     <div className='ml-auto pt-3'>
                         <button 
@@ -34,8 +34,6 @@ function PendingInvitesModal(props){
             </Modal.Header>
             <Modal.Body>
                 {inviteList}
-
-
             </Modal.Body>
         </Modal>
     );

@@ -19,17 +19,18 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
 
-function ServerList({servers, loadServer, createServer}) {
+function ServerList({servers, loadServer, createServer, serverNames}) {
 
   const serverList = []; 
   if(servers) {
+    //create html for servers
     servers.forEach((server, i) => {
       serverList.push(
         <div key={i} className='pb-2'>
             <OverlayTrigger placement="right" overlay={
               <div className='pl-2'>
                 <div className='bg-slate-500 rounded px-2 pb-1'>
-                  <p className='text-slate-100 mb-0'>{server}</p>
+                  <p className='text-slate-100 mb-0'>{serverNames[server]}</p>
                 </div>
               </div>
             }>
@@ -247,6 +248,7 @@ function MainMenu() {
   const [server, setServer] = useState(null);
   const [channel, setChannel] = useState(null);
   const [memberData, setMemberData] = useState(null);
+  const [serverNames, setServerNames] = useState({});
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPendingInvModal, setShowPendingInvModal] = useState(false);
   const [showCreateServModal, setShowCreateServModal] = useState(false);
@@ -309,6 +311,8 @@ function MainMenu() {
     }
   });
 
+
+
   //get user data when initializing
   useEffect(() => {
     async function getUserDataAuth(){
@@ -324,6 +328,8 @@ function MainMenu() {
     }
     getUserDataAuth();
   }, [authInfo]);
+
+
 
   //use effect for setting up message receiving sockets for servers
   useEffect(() => {
@@ -344,6 +350,29 @@ function MainMenu() {
       return () => socket.off('messageResponse' + server._id, onMessageResponse);
     }
   }, [server, channel, userData]);
+
+
+
+  //use effect for getting server names
+  useEffect(() => {
+    function getServerNames(){
+      if(userData){
+        userData.servers.forEach(async (server) => {
+          let nameRes = await axios.get(`${SERVER_URL}/name/${server}`, 
+            {
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+          
+          serverNames[server] = nameRes?.data.name;
+        });
+      }
+    }
+
+    getServerNames();
+  }, [userData, serverNames]);
+
+
 
   //load the selected server
   async function loadServer(serverId) {
@@ -370,6 +399,8 @@ function MainMenu() {
     setChannel(null);
   }
 
+
+
   //add a new server
   async function addNewServer(serverName){
     //create a new server
@@ -392,10 +423,14 @@ function MainMenu() {
     setUserData(userDataRes?.data);
   }
 
+
+
   function loadChannel(channel){
     //set current channel to the selected channel from the server
     setChannel(channel);
   }
+
+
 
   async function addNewChannel(channelName){
     let currChannels = server?.channels;
@@ -491,7 +526,7 @@ function MainMenu() {
       <div className='flex'>
 
         {/*SERVER LIST*/}
-        <ServerList servers={userData?.servers} loadServer={loadServer} createServer={() => setShowCreateServModal(true)}></ServerList>
+        <ServerList servers={userData?.servers} loadServer={loadServer} createServer={() => setShowCreateServModal(true)} serverNames={serverNames}></ServerList>
 
         {/*SERVER*/}
         <div className='flex flex-col h-screen w-screen'>
@@ -513,7 +548,7 @@ function MainMenu() {
         </div>
       </div>
 
-      <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData} socket={socket}></InviteModal>
+      <InviteModal show={showInviteModal} onHide={() => setShowInviteModal(false)} server={server} currUserData={userData} serverNames={serverNames} socket={socket}></InviteModal>
       <PendingInvitesModal show={showPendingInvModal} onHide={() => setShowPendingInvModal(false)} currUserData={userData} acceptInvite={acceptInvite}></PendingInvitesModal>
       <CreateServerModal show={showCreateServModal} onHide={() => setShowCreateServModal(false)} addNewServer={addNewServer}></CreateServerModal>
       <CreateChannelModal show={showCreateChannelModal} onHide={() => setShowCreateChannelModal(false)} server={server} addNewChannel={addNewChannel}></CreateChannelModal>

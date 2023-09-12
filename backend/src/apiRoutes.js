@@ -93,6 +93,13 @@ router.get('/server/:id', async (req, res) => {
     return res.status(200).json(server);
 });
 
+//get server name by id
+router.get('/server/name/:id', async (req, res) => {
+    const { id } = req.params;
+    const server = await Server.findById(id);
+    return res.status(200).json({"name": server.name});
+});
+
 //post new server
 router.post('/server', async (req, res) => {
     const newServer = new Server({ ...req.body });
