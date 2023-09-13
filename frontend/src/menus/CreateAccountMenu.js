@@ -106,7 +106,7 @@ function CreateAccountMenu() {
                 </div>}
 
                 <div className='flex flex-col'>
-                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100'>Create Account</button>
+                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100 hover:bg-slate-100 hover:text-slate-700 transition ease-in'>Create Account</button>
                     <div className='flex flex-col pt-4'>
                         <Link to='/login' className='text-slate-100 font-medium hover:underline'>Already have an account?</Link>
                     </div>
@@ -119,7 +119,7 @@ function CreateAccountMenu() {
                 </div>
                 <AiFillCheckCircle className='text-slate-100 text-9xl'></AiFillCheckCircle>
                 <div className='w-56 pt-10'>
-                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100' onClick={() => navigate('/login')}>Login Page</button>
+                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100 hover:bg-slate-100 hover:text-slate-700 transition ease-in' onClick={() => navigate('/login')}>Login Page</button>
                 </div>
             </div>}
         </div>

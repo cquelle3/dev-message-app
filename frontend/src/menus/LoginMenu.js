@@ -21,6 +21,7 @@ function LoginMenu() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errMsg, setErrMsg] = useState('');
+    const [invalidLogin, setInvalidLogin] = useState(false);
 
     useEffect(() => {
         setErrMsg('');
@@ -38,6 +39,8 @@ function LoginMenu() {
         e.preventDefault();
 
         try{
+            setInvalidLogin(false);
+
             //call backend to verify login credentials
             const res = await axios.post(LOGIN_URL, JSON.stringify({username, password}), 
                 {
@@ -62,20 +65,9 @@ function LoginMenu() {
             navigate('/main-menu');
         } 
         catch(err) {
-            if(!err?.response){
-                setErrMsg('No Server Response');
+            if(err.response?.status === 401){
+                setInvalidLogin(true);
             }
-            else if(err.response?.status === 400){
-                setErrMsg('Missing Username or Password');
-            }
-            else if(err.response?.status === 401){
-                setErrMsg('Unauthorized');
-            }
-            else{
-                setErrMsg('Login Failed');
-            }
-            //focus on the error message if there is an error
-            //errRef.current.focus();
         }
     }
 
@@ -116,8 +108,12 @@ function LoginMenu() {
                     />
                 </div>
 
+                {invalidLogin && <div className=''>
+                    <p className='text-slate-100 font-semibold'>* Invalid username or password.</p>
+                </div>}
+
                 <div className='flex flex-col'>
-                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100'>Login</button>
+                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100 hover:bg-slate-100 hover:text-slate-700 transition ease-in' >Login</button>
                     <div className='pt-3'>
                         <Link to='/create-account' className='text-slate-100 font-medium hover:underline'>Create Account</Link>
                     </div>
