@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import axios from 'axios';
 import { Link, createSearchParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
+import { AiFillWechat } from "react-icons/ai";
 
 const LOGIN_URL = 'http://localhost:3001/auth/login';
 const VERIFY_URL = 'http://localhost:3001/auth/verify';
@@ -79,10 +80,18 @@ function LoginMenu() {
     }
 
     return (
-        <div className='flex flex-col items-center justify-center h-screen bg-red-400'>
-            <form onSubmit={handleSubmit} className='pt-5 pb-5 px-10 bg-white shadow-md rounded'>
+        <div className='flex flex-col items-center justify-center h-screen bg-slate-700'>
+
+            <div className='flex items-center'>
+                <h1 className='text-slate-100'>Dev-Chat</h1>
+                <div className='pl-4'>
+                    <AiFillWechat className='text-slate-100 text-6xl'></AiFillWechat>
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className='pt-5 pb-5 px-10 bg-slate-500 shadow-md rounded'>
                 <div className='pb-3'>
-                    <label htmlFor='username' className='font-bold'>Username</label>
+                    <label htmlFor='username' className='font-bold text-slate-100'>Username</label>
                     <input 
                         id='username' 
                         type='text'
@@ -90,28 +99,27 @@ function LoginMenu() {
                         autoComplete='off'
                         onChange={(e) => setUsername(e.target.value)}
                         value={username}
-                        className='w-full h-10 border rounded'
+                        className='w-full h-10 border rounded bg-slate-700 px-2 text-slate-100 font-semibold'
                         required
                     />
                 </div>
 
                 <div className='pb-3'>
-                    <label htmlFor='password' className='font-bold'>Password</label>
+                    <label htmlFor='password' className='font-bold text-slate-100'>Password</label>
                     <input 
                         id='password'
                         type='password'
                         onChange={(e) => setPassword(e.target.value)}
                         value={password}
-                        className='w-full h-10 border rounded'
+                        className='w-full h-10 border rounded bg-slate-700 px-2 text-slate-100 font-semibold'
                         required
                     />
                 </div>
 
                 <div className='flex flex-col'>
-                    <button className='w-full h-10 font-bold bg-red-400 rounded'>Login</button>
-                    <div className='flex flex-col pt-4'>
-                        <Link to='/' className='text-red-400 font-medium hover:underline'>Forgot Password?</Link>
-                        <Link to='/create-account' className='text-red-400 font-medium hover:underline'>Create Account</Link>
+                    <button className='w-full h-10 font-bold bg-slate-700 rounded text-slate-100'>Login</button>
+                    <div className='pt-3'>
+                        <Link to='/create-account' className='text-slate-100 font-medium hover:underline'>Create Account</Link>
                     </div>
                 </div>
             </form>

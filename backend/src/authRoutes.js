@@ -12,6 +12,13 @@ router.get('/', function(req, res) {
 
 //register an account
 router.post('/register', async function(req, res) {
+
+    //check if username exists
+    var usernameCheck = await User.find({username: req.body.username});
+    if(usernameCheck.length > 0){
+        return res.status(401).json({ message: 'Username already exists.' });
+    }
+
     //create a new user
     var newUser = new User(req.body);
     //hash the password
@@ -23,7 +30,7 @@ router.post('/register', async function(req, res) {
     //save the new users data
     const savedUserData = await newUserData.save();
     //return saved user
-    return res.json({ saved: savedUser });
+    return res.status(200).json({ saved: savedUser });
 });
 
 //login to an account
@@ -35,7 +42,7 @@ router.post('/login', async function(req, res) {
 
     //if a user with the given username does not exist, or the password is incorrect, throw an invalid error
     if(!user || !user.comparePassword(req.body.password)) {
-        return res.status(401).json({ message: 'Invalid username or password'});
+        return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
     const signObj = {

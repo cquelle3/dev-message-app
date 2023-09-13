@@ -413,6 +413,7 @@ function MainMenu() {
     //update users server list
     let newServerList = userData?.servers;
     newServerList.push(serverRes?.data?._id);
+    serverNames[serverRes?.data?._id] = serverName;
     let userDataRes = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({ servers: newServerList }), 
       {
         headers: { 'Content-Type': 'application/json' }
@@ -448,6 +449,8 @@ function MainMenu() {
     socket.emit('refreshServer', {serverId: server._id});
   }
 
+
+
   async function sendMessage(message){
     //create new message object
     let newMsg = {
@@ -473,10 +476,14 @@ function MainMenu() {
     socket.emit('message', {message: newMsg, channelName: channel?.channelName, serverId: server?._id});
   }
 
+
+
   function inviteUser(){
     console.log('inviting...');
     setShowInviteModal(true);
   }
+
+
 
   async function acceptInvite(serverId){
     let currServers = userData.servers;
@@ -521,6 +528,8 @@ function MainMenu() {
     socket.emit('refreshServer', {serverId: serverId});
   }
 
+
+  
   return (
     <>
       <div className='flex'>

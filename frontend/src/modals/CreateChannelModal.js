@@ -4,12 +4,21 @@ import { Button, Form, Modal } from "react-bootstrap";
 function CreateChannelModal(props){
     
     const [channelName, setChannelName] = useState("");
+    const [invalidName, setInvalidName] = useState(false);
+    const [invalidMsg, setInvalidMsg] = useState("");
 
     function createChannel(){
         let currChannels = Object.keys(props.server.channels);
-        if(currChannels.findIndex((name) => name === channelName) === -1){
-            props.addNewChannel(channelName);
+        if(currChannels.findIndex((name) => name.trim() === channelName.trim()) === -1 && channelName.trim() !== ""){
+            setInvalidName(false);
+            setInvalidMsg("");
+            props.addNewChannel(channelName.trim());
             props.onHide();
+        }
+        else{
+            if(channelName.trim() === "") setInvalidMsg("Channel name cannot be blank.");
+            else setInvalidMsg("Channel name already exists.");
+            setInvalidName(true);
         }
     }
 
@@ -28,7 +37,9 @@ function CreateChannelModal(props){
                             value={channelName}
                             onChange={(e) => setChannelName(e.target.value)}
                             autoFocus
+                            isInvalid={invalidName}
                         />
+                        <Form.Control.Feedback type="invalid">{invalidMsg}</Form.Control.Feedback>
                     </Form.Group>
                 </Form>
             </Modal.Body>
