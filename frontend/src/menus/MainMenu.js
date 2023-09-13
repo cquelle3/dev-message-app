@@ -2,6 +2,7 @@ import { BsEmojiSmile, BsFillPersonPlusFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
+import { BiSolidCrown } from "react-icons/bi";
 import { IoMdSettings } from "react-icons/io";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -68,7 +69,7 @@ function ChannelList({channels, loadChannel, createChannel}) {
     channelNames.forEach((channelName, i) => {
       channelList.push(
         <div key={i} className='flex items-center pt-2.5 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
-          <p className='pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
+          <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
         </div>
       );
     });
@@ -94,7 +95,7 @@ function ChannelList({channels, loadChannel, createChannel}) {
   );
 }
 
-function MemberList({members, memberData}){
+function MemberList({members, memberData, ownerId}){
   const memberList = [];
   var membersTitle = "";
   if(members){
@@ -103,8 +104,11 @@ function MemberList({members, memberData}){
       memberList.push(
         <div key={i} className='flex items-center px-2 hover:bg-slate-600 rounded'>
             <div className='bg-slate-300 w-10 h-10 rounded-full select-none'></div>
-            <div className='pl-3 pt-3'>
+            <div className='flex pl-3 pt-3'>
               <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
+              {ownerId === memberId && <div className='pl-3 pt-0.5'>
+                <BiSolidCrown className='text-slate-100 text-xl'></BiSolidCrown>
+              </div>}
             </div>
         </div>
       )
@@ -215,7 +219,7 @@ function Channel({channelData, memberData, sendMessage}) {
 
         {/*CHANNEL TITLE*/}
         <div className='border-b-4 border-slate-400 pb-2'>
-          <h1 className='text-2xl font-semibold text-slate-100 select-none'>{channelHeader}</h1>
+          <h1 className='truncate text-2xl font-semibold text-slate-100 select-none'>{channelHeader}</h1>
         </div>
 
         {/*MESSAGES*/}
@@ -404,7 +408,7 @@ function MainMenu() {
   //add a new server
   async function addNewServer(serverName){
     //create a new server
-    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: serverName, members: [userData.userId], channels: {'general': []} }), 
+    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: serverName, members: [userData.userId], channels: {'general': []}, ownerId: userData.userId }), 
       {
         headers: { 'Content-Type': 'application/json' }
       }
@@ -552,7 +556,7 @@ function MainMenu() {
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
 
             {/*MEMBER SIDEBAR*/}
-            <MemberList members={server?.members} memberData={memberData}></MemberList>    
+            <MemberList members={server?.members} memberData={memberData} ownerId={server?.ownerId}></MemberList>    
           </div>
         </div>
       </div>

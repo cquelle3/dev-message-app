@@ -67,7 +67,7 @@ function InviteModal(props){
 
                     <div className='ml-auto pt-2'>
                         <button 
-                            className='font-semibold outline outline-1 outline-blue-700 text-blue-700 rounded w-14 hover:bg-blue-100'
+                            className='font-semibold border-none bg-blue-100 text-blue-700 rounded w-14 hover:bg-blue-100 active:bg-blue-300 active:ring-3 active:border-blue-500'
                             onClick={() => inviteUser(user)}
                         >Invite</button>
                     </div>
@@ -82,7 +82,7 @@ function InviteModal(props){
                 <Modal.Title>Invite Users</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Form>
+                <Form className='pb-3'>
                     <Form.Group>
                         <Form.Label>Search</Form.Label>
                         <Form.Control 
@@ -95,7 +95,7 @@ function InviteModal(props){
                         />
                     </Form.Group>
                 </Form>
-                <div className='pt-3 px-3'>
+                <div className='pt-3 px-3 max-h-96 overflow-auto'>
                     {userList} 
                 </div>
             </Modal.Body>

@@ -53,6 +53,10 @@ const ServerSchema = new mongoose.Schema({
     channels: {
         type: Object,
         required: true
+    },
+    ownerId: {
+        type: String,
+        required: true
     }
 });
 
