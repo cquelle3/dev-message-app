@@ -16,9 +16,9 @@ function PendingInvitesModal(props){
                     <div className=''>
                         <p className='font-semibold'>'{props.currUserData.invites[serverId].userName}' invited you to join '{props.currUserData.invites[serverId].serverName}'</p>
                     </div>
-                    <div className='ml-auto pt-3'>
+                    <div className='ml-auto pt-1'>
                         <button 
-                            className='font-semibold outline outline-1 outline-blue-700 text-blue-700 rounded w-14 hover:bg-blue-100'
+                            className='font-semibold border-none bg-blue-100 text-blue-700 rounded w-16 hover:bg-blue-100 active:bg-blue-300 active:ring-3 active:border-blue-500'
                             onClick={() => props.acceptInvite(serverId)}
                         >Accept</button>
                     </div>

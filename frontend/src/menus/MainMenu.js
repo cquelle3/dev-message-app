@@ -60,7 +60,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
   );
 }
 
-function ChannelList({channels, loadChannel, createChannel}) {
+function ChannelList({channels, loadChannel, createChannel, isOwner}) {
   const channelList = [];
   var channelsTitle = "";
   var addChannelButton = <></>;
@@ -86,7 +86,7 @@ function ChannelList({channels, loadChannel, createChannel}) {
             <p className='text-xs font-semibold text-slate-100 select-none'>{channelsTitle}</p>
           </div>
           <div className='pl-4 pb-3'>
-            {addChannelButton}
+            {isOwner && addChannelButton}
           </div>
         </div>
         {channelList} 
@@ -128,7 +128,7 @@ function MemberList({members, memberData, ownerId}){
   );
 }
 
-function ServerHeader({server, inviteUser, openInvites, openSettings}){
+function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner}){
 
   const [openDropdown, setOpenDropdown] = useState(false);
 
@@ -147,7 +147,7 @@ function ServerHeader({server, inviteUser, openInvites, openSettings}){
           <FiMail className='text-2xl text-slate-100 cursor-pointer' onClick={() => openInvites()}></FiMail>
         </div>
 
-        {server && <div className='pl-10'>
+        {server && isOwner && <div className='pl-10'>
           <BsFillPersonPlusFill className='text-2xl text-slate-100 cursor-pointer' onClick={() => inviteUser()}></BsFillPersonPlusFill>
         </div>}
       </div>
@@ -181,10 +181,10 @@ function Channel({channelData, memberData, sendMessage}) {
       let msgUsername = memberData[msgUserId]?.username;
       messageList.push(
         <div key={i} className='flex pb-6'>
-            <div className='bg-slate-300 w-12 h-12 rounded-full select-none'></div>
+            <div className='shrink-0 bg-slate-300 w-12 h-12 rounded-full select-none'></div>
             <div className='pl-3'>
               <p className='font-medium text-slate-400 mb-0'>{msgUsername}</p>
-              <p className='font-medium text-slate-100'>{message?.text}</p>
+              <p className='break-all font-medium text-slate-100'>{message?.text}</p>
             </div>
         </div>
       );
@@ -262,17 +262,15 @@ function MainMenu() {
   /*SOCKET IO COMMUNICATION*/
   useEffect(() => {
     function onConnect() {
-      console.log('connected to socket.io');
       setIsConnected(true);
     }
 
     function onDisconnect() {
-      console.log('disconnected from socket.io');
       setIsConnected(false);
     }
 
     function onMessage(value){
-      console.log(value);
+      //console.log(value);
     }
 
     async function onRefreshServerResponse(data){
@@ -289,7 +287,6 @@ function MainMenu() {
     }
 
     async function onRefreshUserData(data){
-      console.log('refreshing user data');
       if(userData?.userId === data?.userId){  
         let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`,
           {
@@ -328,6 +325,11 @@ function MainMenu() {
           }
         );
         setUserData(resUserData?.data);
+
+        //if the user has servers, load the first one
+        if(resUserData?.data?.servers.length > 0){
+          loadServer(resUserData?.data?.servers[0]);
+        }
       }
     }
     getUserDataAuth();
@@ -441,8 +443,6 @@ function MainMenu() {
     let currChannels = server?.channels;
     currChannels[channelName] = [];
 
-    console.log(currChannels);
-
     let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), 
       {
         headers: { 'Content-Type': 'application/json' }
@@ -483,7 +483,6 @@ function MainMenu() {
 
 
   function inviteUser(){
-    console.log('inviting...');
     setShowInviteModal(true);
   }
 
@@ -545,12 +544,12 @@ function MainMenu() {
         <div className='flex flex-col h-screen w-screen'>
           
           {/*SERVER HEADER*/}
-          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)}></ServerHeader>
+          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)} isOwner={server?.ownerId === userData?.userId}></ServerHeader>
 
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>
             {/*CHANNEL SIDEBAR*/}
-            <ChannelList channels={server?.channels} loadChannel={loadChannel} createChannel={() => setShowCreateChannelModal(true)}></ChannelList>
+            <ChannelList channels={server?.channels} loadChannel={loadChannel} createChannel={() => setShowCreateChannelModal(true)} isOwner={server?.ownerId === userData?.userId}></ChannelList>
 
             {/*CHANNEL*/}
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
