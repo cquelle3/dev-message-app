@@ -1,9 +1,10 @@
-import { BsEmojiSmile, BsFillPersonPlusFill } from "react-icons/bs";
+import { BsEmojiSmile, BsFillPersonPlusFill, BsTrashFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
 import { BiSolidCrown } from "react-icons/bi";
 import { IoMdSettings } from "react-icons/io";
+import { FaTrashCan } from "react-icons/fa";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
@@ -60,7 +61,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
   );
 }
 
-function ChannelList({channels, loadChannel, createChannel, isOwner}) {
+function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwner}) {
   const channelList = [];
   var channelsTitle = "";
   var addChannelButton = <></>;
@@ -68,8 +69,15 @@ function ChannelList({channels, loadChannel, createChannel, isOwner}) {
     let channelNames = Object.keys(channels);
     channelNames.forEach((channelName, i) => {
       channelList.push(
-        <div key={i} className='flex items-center pt-2.5 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
-          <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
+        <div key={i} className='flex items-center'>
+          <div className='flex items-center pt-2.5 w-44 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
+            <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
+          </div>
+          {isOwner &&
+            <div className='pb-1.5 pl-2'>
+              <BsTrashFill className='text-slate-100 text-xl cursor-pointer' onClick={() => deleteChannel(channelName)}></BsTrashFill>
+            </div>
+          }
         </div>
       );
     });
@@ -89,7 +97,9 @@ function ChannelList({channels, loadChannel, createChannel, isOwner}) {
             {isOwner && addChannelButton}
           </div>
         </div>
-        {channelList} 
+        <div>
+          {channelList} 
+        </div>
       </div>
     </div>
   );
@@ -454,6 +464,10 @@ function MainMenu() {
   }
 
 
+  async function deleteChannel(channelName){
+    console.log(channelName);
+  }
+
 
   async function sendMessage(message){
     //create new message object
@@ -549,7 +563,7 @@ function MainMenu() {
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>
             {/*CHANNEL SIDEBAR*/}
-            <ChannelList channels={server?.channels} loadChannel={loadChannel} createChannel={() => setShowCreateChannelModal(true)} isOwner={server?.ownerId === userData?.userId}></ChannelList>
+            <ChannelList channels={server?.channels} loadChannel={loadChannel} createChannel={() => setShowCreateChannelModal(true)} deleteChannel={deleteChannel} isOwner={server?.ownerId === userData?.userId}></ChannelList>
 
             {/*CHANNEL*/}
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
