@@ -36,6 +36,7 @@ function CreateChannelModal(props){
                             placeholder="channel"
                             value={channelName}
                             onChange={(e) => setChannelName(e.target.value)}
+                            onKeyDown={(e) => {if(e.key === 'Enter') { e.preventDefault(); }}}
                             autoFocus
                             isInvalid={invalidName}
                         />

@@ -41,10 +41,12 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
   if(servers) {
     //create html for servers
     servers.forEach((server, i) => {
+      let servername = serverNames[server];
+      let serverIcon = servername !== undefined ? servername[0] : '';
       serverList.push(
         <div key={i} className='pb-2'>
             <OverlayTrigger placement="right" overlay={<InfoPopup popupText={serverNames[server]} padding='pl-2'></InfoPopup>}>
-              <div className='bg-slate-300 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
+              <div className='flex items-center justify-center bg-slate-300 w-12 h-12 font-medium text-slate-500 text-lg rounded-full cursor-pointer' onClick={() => loadServer(server)}>{serverIcon}</div>
             </OverlayTrigger>
         </div>
       );
@@ -52,7 +54,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
   }
 
   return (
-    <div className='flex flex-col h-screen px-3 pt-3 bg-slate-900'>
+    <div className='flex flex-col overflow-y-auto h-screen px-3 pt-3 bg-slate-900'>
       {serverList}
       <div>
         <OverlayTrigger placement="right" overlay={<InfoPopup popupText="Create Server" padding='pl-2'></InfoPopup>}>
@@ -103,7 +105,7 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
 
   return (
     <div className='flex'>
-      <div className='w-56 px-2 pt-4 bg-slate-700'>
+      <div className='w-56 px-2 pt-4 bg-slate-700 overflow-y-auto'>
         <div className='flex'>
           <div className='pt-1'>
             <p className='text-xs font-semibold text-slate-100 select-none'>{channelsTitle}</p>
@@ -124,12 +126,13 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
   if(members){
     members.forEach((memberId, i) => {
       let memberUsername = memberData[memberId]?.username;
+      let memberIcon = memberData[memberId]?.username !== undefined ? memberData[memberId]?.username[0] : '';
       memberList.push(
         <div key={i} className='flex items-center'>
           <div className='flex items-center w-96 px-2 hover:bg-slate-600 rounded'>
-              <div className='shrink-0 bg-slate-300 w-10 h-10 rounded-full select-none'></div>
-              <div className='flex pl-3 pt-3'>
-                <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
+              <div className='flex items-center justify-center shrink-0 bg-slate-300 w-10 h-10 font-medium text-slate-500 text-lg rounded-full select-none'>{memberIcon}</div>
+              <div className='flex w-64 pl-3 pt-3'>
+                <p className='truncate font-medium text-slate-100 select-none'>{memberUsername}</p>
                 {ownerId === memberId && <div className='pl-3 pt-0.5'>
                   <BiSolidCrown className='text-slate-100 text-xl'></BiSolidCrown>
                 </div>}
@@ -152,7 +155,7 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
   }
 
   return (
-    <div className='bg-slate-700 px-2 pt-4 w-96'>
+    <div className='bg-slate-700 px-2 pt-4 w-96 overflow-y-auto'>
       {/*MEMBER LIST*/}
       <div className='flex items-center pb-2'>
         <p className='text-xs font-semibold text-slate-100 select-none'>{membersTitle}</p>

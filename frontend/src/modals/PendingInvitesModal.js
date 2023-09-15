@@ -32,8 +32,10 @@ function PendingInvitesModal(props){
             <Modal.Header closeButton>
                 <Modal.Title>Invites</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-                {inviteList}
+            <Modal.Body className='max-h-96 overflow-auto'>
+                <div>
+                    {inviteList}
+                </div>
             </Modal.Body>
         </Modal>
     );

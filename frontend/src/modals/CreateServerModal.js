@@ -25,6 +25,7 @@ function CreateServerModal(props){
                             placeholder="server"
                             value={serverName}
                             onChange={(e) => setServerName(e.target.value)}
+                            onKeyDown={(e) => {if(e.key === 'Enter') { e.preventDefault(); }}}
                             autoFocus
                         />
                     </Form.Group>

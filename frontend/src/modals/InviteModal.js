@@ -47,7 +47,7 @@ function InviteModal(props){
         userSearchList.forEach((user, i) => {
             userList.push(
                 <div key={i} className='flex w-full pb-2'>
-                    <div className='bg-blue-100 w-10 h-10 rounded-full'></div>
+                    <div className='flex items-center justify-center bg-slate-300 w-10 h-10 rounded-full text-slate-500 font-medium text-lg'>{user.username[0]}</div>
                     <div className='pt-2 pl-2'>
                         <p className='font-semibold'>{user.username}</p>
                     </div>
