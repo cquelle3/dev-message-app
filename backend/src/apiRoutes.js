@@ -75,7 +75,11 @@ router.put('/userData/:id', async (req, res) => {
     const { id } = req.params;
     await UserData.updateOne({ _id: id }, req.body);
     const updatedUserData = await UserData.findById(id);
-    return res.status(200).json(updatedUserData);
+    //get username and add it to user data object
+    let retData = updatedUserData.toObject();
+    const user = await User.findById(retData['userId']);
+    retData['username'] = user.username;
+    return res.status(200).json(retData);
 });
 
 //delete user data by id

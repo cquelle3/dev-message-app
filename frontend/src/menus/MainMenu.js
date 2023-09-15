@@ -7,7 +7,7 @@ import { IoMdSettings } from "react-icons/io";
 import { FaTrashCan } from "react-icons/fa";
 import { RiDeleteBin2Fill } from "react-icons/ri"; 
 import { ImExit } from "react-icons/im";
-import { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import axios from "axios";
@@ -23,6 +23,14 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
 
+const InfoPopup = React.forwardRef(({arrowProps, hasDoneInitialMeasure, popupText, ...props}, ref) => (
+  <div {...props} ref={ref} className='pl-2'>
+    <div className='bg-slate-500 rounded px-2 pb-1'>
+      <p className='text-slate-100 mb-0'>{popupText}</p>
+    </div>
+  </div>
+));
+
 function ServerList({servers, loadServer, createServer, serverNames}) {
 
   const serverList = []; 
@@ -31,13 +39,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
     servers.forEach((server, i) => {
       serverList.push(
         <div key={i} className='pb-2'>
-            <OverlayTrigger placement="right" overlay={
-              <div className='pl-2'>
-                <div className='bg-slate-500 rounded px-2 pb-1'>
-                  <p className='text-slate-100 mb-0'>{serverNames[server]}</p>
-                </div>
-              </div>
-            }>
+            <OverlayTrigger placement="right" overlay={<InfoPopup popupText={serverNames[server]}></InfoPopup>}>
               <div className='bg-slate-300 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
             </OverlayTrigger>
         </div>
@@ -49,13 +51,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
     <div className='flex flex-col h-screen px-3 pt-3 bg-slate-900'>
       {serverList}
       <div>
-        <OverlayTrigger placement="right" overlay={
-          <div className='pl-2'>
-            <div className='bg-slate-500 rounded px-2 pb-1'>
-              <p className='text-slate-100 mb-0'>Create Server</p>
-            </div>
-          </div>
-        }>
+        <OverlayTrigger placement="right" overlay={<InfoPopup popupText="Create Server"></InfoPopup>}>
           <div className='flex items-center justify-center bg-slate-700 w-12 h-12 rounded-full cursor-pointer' onClick={() => createServer()}><HiPlus className='text-xl text-slate-100'></HiPlus></div>
         </OverlayTrigger>
       </div>
