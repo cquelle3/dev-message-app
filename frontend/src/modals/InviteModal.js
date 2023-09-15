@@ -81,7 +81,7 @@ function InviteModal(props){
     return(
         <Modal centered show={props.show} onHide={props.onHide}>
             <Modal.Header closeButton>
-                <Modal.Title>Invite Users</Modal.Title>
+                <Modal.Title>Send Invites</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form className='pb-3'>

@@ -23,8 +23,8 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
 
-const InfoPopup = React.forwardRef(({arrowProps, hasDoneInitialMeasure, popupText, ...props}, ref) => (
-  <div {...props} ref={ref} className='pl-2'>
+const InfoPopup = React.forwardRef(({arrowProps, hasDoneInitialMeasure, popupText, padding, ...props}, ref) => (
+  <div {...props} ref={ref} className={padding}>
     <div className='bg-slate-500 rounded px-2 pb-1'>
       <p className='text-slate-100 mb-0'>{popupText}</p>
     </div>
@@ -39,7 +39,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
     servers.forEach((server, i) => {
       serverList.push(
         <div key={i} className='pb-2'>
-            <OverlayTrigger placement="right" overlay={<InfoPopup popupText={serverNames[server]}></InfoPopup>}>
+            <OverlayTrigger placement="right" overlay={<InfoPopup popupText={serverNames[server]} padding='pl-2'></InfoPopup>}>
               <div className='bg-slate-300 w-12 h-12 rounded-full cursor-pointer' onClick={() => loadServer(server)}></div>
             </OverlayTrigger>
         </div>
@@ -51,7 +51,7 @@ function ServerList({servers, loadServer, createServer, serverNames}) {
     <div className='flex flex-col h-screen px-3 pt-3 bg-slate-900'>
       {serverList}
       <div>
-        <OverlayTrigger placement="right" overlay={<InfoPopup popupText="Create Server"></InfoPopup>}>
+        <OverlayTrigger placement="right" overlay={<InfoPopup popupText="Create Server" padding='pl-2'></InfoPopup>}>
           <div className='flex items-center justify-center bg-slate-700 w-12 h-12 rounded-full cursor-pointer' onClick={() => createServer()}><HiPlus className='text-xl text-slate-100'></HiPlus></div>
         </OverlayTrigger>
       </div>
@@ -73,8 +73,13 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
             <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
           </div>
           {isOwner && channelNames.length > 1 &&
+
             <div className='pb-1.5 pl-2'>
-              <BsTrashFill className='text-slate-100 text-xl cursor-pointer' onClick={() => deleteChannel(channelName)}></BsTrashFill>
+              <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Delete Channel" padding='pr-2'></InfoPopup>}>
+                <div>
+                  <BsTrashFill className='text-slate-100 text-xl cursor-pointer' onClick={() => deleteChannel(channelName)}></BsTrashFill>
+                </div>
+              </OverlayTrigger>
             </div>
           }
         </div>
@@ -82,19 +87,24 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
     });
 
     channelsTitle = `Channels - ${Object.keys(channels)?.length}`;
-    addChannelButton = <AiOutlinePlusCircle className='text-2xl text-slate-100 cursor-pointer' onClick={() => createChannel()}></AiOutlinePlusCircle>;
+    addChannelButton = 
+      <div className='pl-3'>
+        <OverlayTrigger placement="top" overlay={<InfoPopup popupText="Create Channel" padding='pb-2'></InfoPopup>}>
+          <div>
+            <AiOutlinePlusCircle className='text-2xl text-slate-100 cursor-pointer' onClick={() => createChannel()}></AiOutlinePlusCircle>;
+          </div>
+        </OverlayTrigger>
+      </div>
   }
 
   return (
     <div className='flex'>
       <div className='w-56 px-2 pt-4 bg-slate-700'>
-        <div className='flex items-center'>
-          <div className=''>
+        <div className='flex'>
+          <div className='pt-1'>
             <p className='text-xs font-semibold text-slate-100 select-none'>{channelsTitle}</p>
           </div>
-          <div className='pl-4 pb-3'>
-            {isOwner && addChannelButton}
-          </div>
+          {isOwner && addChannelButton}
         </div>
         <div>
           {channelList} 
@@ -121,9 +131,15 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
                 </div>}
               </div>
           </div>
-          {ownerId !== memberId && isOwner && <div className='ml-auto pl-3'>
-            <BsPersonDashFill className='text-slate-100 text-2xl cursor-pointer' onClick={() => removeMember(memberId)}></BsPersonDashFill>
-          </div>}
+          {ownerId !== memberId && isOwner && 
+            <div className='ml-auto pl-3'>
+              <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Kick Member" padding='pr-2'></InfoPopup>}>
+                <div>
+                  <BsPersonDashFill className='text-slate-100 text-2xl cursor-pointer' onClick={() => removeMember(memberId)}></BsPersonDashFill>
+                </div>
+              </OverlayTrigger>
+            </div>
+          }
         </div>
       )
     });
@@ -136,7 +152,16 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
       {/*MEMBER LIST*/}
       <div className='flex items-center pb-2'>
         <p className='text-xs font-semibold text-slate-100 select-none'>{membersTitle}</p>
-        {!isOwner && members && <ImExit className='ml-auto text-2xl text-slate-100 cursor-pointer' onClick={() => removeMember(userId)}></ImExit>}
+        {!isOwner && members && 
+
+          <div className='ml-auto pb-2'>
+            <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Leave Channel" padding='pr-2'></InfoPopup>}>
+              <div>
+                <ImExit className='text-2xl text-slate-100 cursor-pointer' onClick={() => removeMember(userId)}></ImExit>
+              </div>
+            </OverlayTrigger>
+          </div>
+        }
       </div>
       <div>
         {memberList}
@@ -154,25 +179,41 @@ function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner, d
     <div className='flex h-20 w-full'>
       {/*SERVER HEADER*/}
       <div className='flex items-center w-full p-5 bg-slate-800'>
-        {isOwner && <div className='pr-10 pb-2'>
-          <RiDeleteBin2Fill className='text-3xl text-slate-100 cursor-pointer' onClick={() => deleteServer()}></RiDeleteBin2Fill>
-        </div>}
+        {isOwner && 
+          <OverlayTrigger placement="bottom" overlay={<InfoPopup popupText="Delete Server"></InfoPopup>}>
+            <div className='pb-2'>
+              <RiDeleteBin2Fill className='text-3xl text-slate-100 cursor-pointer' onClick={() => deleteServer()}></RiDeleteBin2Fill>
+            </div>
+          </OverlayTrigger>
+        }
 
-        <div className='w-1/2'>
+        <div className='w-1/2 pl-10'>
           <h1 className='text-2xl truncate font-semibold text-slate-100 select-none'>{server?.name}</h1>
         </div>
 
-        <div className='ml-auto'>
-          <IoMdSettings className='text-2xl text-slate-100 cursor-pointer' onClick={() => openSettings()}></IoMdSettings>
+        <OverlayTrigger placement="bottom" overlay={<InfoPopup popupText="Settings"></InfoPopup>}>
+          <div className='ml-auto pb-2'>
+            <IoMdSettings className='text-2xl text-slate-100 cursor-pointer' onClick={() => openSettings()}></IoMdSettings>
+          </div>
+        </OverlayTrigger>
+
+        <div className='pl-10'>
+          <OverlayTrigger placement="bottom" overlay={<InfoPopup popupText="Invites"></InfoPopup>}>
+            <div className='pb-2' onClick={() => openInvites()}>
+              <FiMail className='text-2xl text-slate-100 cursor-pointer' onClick={() => openInvites()}></FiMail>
+            </div>
+          </OverlayTrigger>
         </div>
 
-        <div className='pl-10' onClick={() => openInvites()}>
-          <FiMail className='text-2xl text-slate-100 cursor-pointer' onClick={() => openInvites()}></FiMail>
-        </div>
-
-        {server && isOwner && <div className='pl-10'>
-          <BsFillPersonPlusFill className='text-2xl text-slate-100 cursor-pointer' onClick={() => inviteUser()}></BsFillPersonPlusFill>
-        </div>}
+        {server && isOwner && 
+          <div className='pl-10'>
+            <OverlayTrigger placement="bottom" overlay={<InfoPopup popupText="Send Invites"></InfoPopup>}>
+              <div className='pb-2'>
+                <BsFillPersonPlusFill className='text-2xl text-slate-100 cursor-pointer' onClick={() => inviteUser()}></BsFillPersonPlusFill>
+              </div>
+            </OverlayTrigger>
+          </div>
+        }
       </div>
     </div>
     </>
