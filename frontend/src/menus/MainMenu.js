@@ -19,9 +19,13 @@ import CreateServerModal from "../modals/CreateServerModal";
 import CreateChannelModal from "../modals/CreateChannelModal";
 import SettingsModal from "../modals/SettingsModal";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { createConfirmation } from "react-confirm";
+import ConfirmModal from "../modals/ConfirmModal";
 
 const USER_DATA_URL = "http://localhost:3001/api/userData";
 const SERVER_URL = "http://localhost:3001/api/server";
+
+const confirm = createConfirmation(ConfirmModal);
 
 const InfoPopup = React.forwardRef(({arrowProps, hasDoneInitialMeasure, popupText, padding, ...props}, ref) => (
   <div {...props} ref={ref} className={padding}>
@@ -135,7 +139,7 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
             <div className='ml-auto pl-3'>
               <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Kick Member" padding='pr-2'></InfoPopup>}>
                 <div>
-                  <BsPersonDashFill className='text-slate-100 text-2xl cursor-pointer' onClick={() => removeMember(memberId)}></BsPersonDashFill>
+                  <BsPersonDashFill className='text-slate-100 text-2xl cursor-pointer' onClick={() => removeMember(memberId, true)}></BsPersonDashFill>
                 </div>
               </OverlayTrigger>
             </div>
@@ -157,7 +161,7 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
           <div className='ml-auto pb-2'>
             <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Leave Channel" padding='pr-2'></InfoPopup>}>
               <div>
-                <ImExit className='text-2xl text-slate-100 cursor-pointer' onClick={() => removeMember(userId)}></ImExit>
+                <ImExit className='text-2xl text-slate-100 cursor-pointer' onClick={() => removeMember(userId, false)}></ImExit>
               </div>
             </OverlayTrigger>
           </div>
@@ -475,18 +479,20 @@ function MainMenu() {
   
 
   async function deleteServer(){
-    //remove server from each members server list
-    for(let memberId of server.members){
-      let memDataRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
-      let memberServers = memDataRes.data.servers;
-      let index = memberServers.indexOf(server._id);
-      memberServers.splice(index, 1);
-      await axios.put(`${USER_DATA_URL}/${memDataRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
-      
-      //refresh user data
-      socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
+    if(await confirm({confirmation: `Are you sure you want to delete '${serverNames[server._id]}'?`})){
+      //remove server from each members server list
+      for(let memberId of server.members){
+        let memDataRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
+        let memberServers = memDataRes.data.servers;
+        let index = memberServers.indexOf(server._id);
+        memberServers.splice(index, 1);
+        await axios.put(`${USER_DATA_URL}/${memDataRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
+        
+        //refresh user data
+        socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
+      }
+      await axios.delete(`${SERVER_URL}/${server._id}`, {headers: { 'Content-Type': 'application/json' }});
     }
-    await axios.delete(`${SERVER_URL}/${server._id}`, {headers: { 'Content-Type': 'application/json' }});
   }
 
 
@@ -510,13 +516,16 @@ function MainMenu() {
 
 
   async function deleteChannel(channelName){
-    let currChannels = server?.channels;
-    delete currChannels[channelName];
+    //if user confirms confirmation modal, delete channel
+    if(await confirm({confirmation: `Are you sure you want to delete '${channelName}'?`})){
+      let currChannels = server?.channels;
+      delete currChannels[channelName];
 
-    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), {headers: { 'Content-Type': 'application/json' }});
-    
-    //refresh server for other members
-    socket.emit('refreshServer', {serverId: server._id});
+      let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), {headers: { 'Content-Type': 'application/json' }});
+      
+      //refresh server for other members
+      socket.emit('refreshServer', {serverId: server._id});
+    }
   }
 
 
@@ -593,25 +602,35 @@ function MainMenu() {
 
 
 
-  async function removeMember(memberId){
-    //get members data, remove server from their server list
-    let getMemberRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
-    let memberServers = getMemberRes?.data?.servers;
-    let serverIndex = memberServers.indexOf(server._id);
-    memberServers.splice(serverIndex, 1);
-    await axios.put(`${USER_DATA_URL}/${getMemberRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
+  async function removeMember(memberId, isKicked){
+    var confirmationText = '';
+    if(isKicked){
+      confirmationText = `Are you sure you want to kick '${memberData[memberId]?.username}' from the server?`;
+    }
+    else{
+      confirmationText = `Are you sure you want to leave '${serverNames[server._id]}'?`;
+    }
 
-    //refresh user data for removed user
-    socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
+    if(await confirm({confirmation: confirmationText})){
+      //get members data, remove server from their server list
+      let getMemberRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
+      let memberServers = getMemberRes?.data?.servers;
+      let serverIndex = memberServers.indexOf(server._id);
+      memberServers.splice(serverIndex, 1);
+      await axios.put(`${USER_DATA_URL}/${getMemberRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
 
-    //remove member from the server member list
-    let serverMembers = server.members;
-    let memberIndex = serverMembers.indexOf(memberId);
-    serverMembers.splice(memberIndex, 1);
-    await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({members: serverMembers}), {headers: { 'Content-Type': 'application/json' }});
+      //refresh user data for removed user
+      socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
 
-    //refresh server for other members
-    socket.emit('refreshServer', {serverId: server._id, kickedUser: memberId});
+      //remove member from the server member list
+      let serverMembers = server.members;
+      let memberIndex = serverMembers.indexOf(memberId);
+      serverMembers.splice(memberIndex, 1);
+      await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({members: serverMembers}), {headers: { 'Content-Type': 'application/json' }});
+
+      //refresh server for other members
+      socket.emit('refreshServer', {serverId: server._id, kickedUser: memberId});
+    }
   }
 
 
