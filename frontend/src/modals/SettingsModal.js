@@ -10,8 +10,6 @@ function SettingsModal(props){
         props.navigate('/login');
     }
 
-    <button className='text-slate-100' onClick={logout}>logout</button>
-
     return(
         <Modal centered show={props.show} onHide={props.onHide}>
             <Modal.Header closeButton>

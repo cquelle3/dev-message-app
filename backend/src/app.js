@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
 
     socket.on('refreshServer', (data) => {
         console.log(data);
-        io.emit('refreshServerResponse', data);
+        io.emit('refreshServerResponse' + data.serverId, data);
     });
 
     socket.on('refreshUserData', (data) => {

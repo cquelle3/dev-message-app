@@ -339,12 +339,6 @@ function MainMenu() {
       //console.log(value);
     }
 
-    async function onRefreshServerResponse(data){
-      if(server?._id === data?.serverId && data?.kickedUser !== userData?.userId){
-        loadServer(server?._id);
-      }
-    }
-
     async function onRefreshUserDataResponse(data){
       if(userData?.userId === data?.userId){  
         let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`, {headers: { 'Content-Type': 'application/json' }});
@@ -361,14 +355,12 @@ function MainMenu() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
-    socket.on('refreshServerResponse', onRefreshServerResponse);
     socket.on('refreshUserDataResponse', onRefreshUserDataResponse);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
-      socket.off('refreshServerResponse', onRefreshServerResponse);
       socket.off('refreshUserDataResponse', onRefreshUserDataResponse);
     }
   });
@@ -411,10 +403,21 @@ function MainMenu() {
       }
     }
 
+    async function onRefreshServerResponse(data){
+      console.log('refreshing server');
+      if(data?.kickedUser !== userData?.userId){
+        loadServer(server?._id);
+      }
+    }
+
     //create socket for message responses for current server for user
     if(server){
       socket.on('messageResponse' + server._id, onMessageResponse); 
-      return () => socket.off('messageResponse' + server._id, onMessageResponse);
+      socket.on('refreshServerResponse' + server._id, onRefreshServerResponse);
+      return () => {
+        socket.off('messageResponse' + server._id, onMessageResponse);
+        socket.off('refreshServerResponse' + server._id, onRefreshServerResponse);
+      }
     }
   }, [server, channel, userData]);
 
