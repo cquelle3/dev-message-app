@@ -5,6 +5,7 @@ import { AiOutlinePlusCircle } from "react-icons/ai";
 import { BiSolidCrown } from "react-icons/bi";
 import { IoMdSettings } from "react-icons/io";
 import { FaTrashCan } from "react-icons/fa";
+import { ImExit } from "react-icons/im";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
@@ -106,7 +107,7 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
   );
 }
 
-function MemberList({members, memberData, ownerId, isOwner, removeMember}){
+function MemberList({members, memberData, ownerId, userId, isOwner, removeMember}){
   const memberList = [];
   var membersTitle = "";
   if(members){
@@ -136,10 +137,13 @@ function MemberList({members, memberData, ownerId, isOwner, removeMember}){
   return (
     <div className='bg-slate-700 px-2 pt-4 w-96'>
       {/*MEMBER LIST*/}
-      <div className='pb-2'>
+      <div className='flex items-center pb-2'>
         <p className='text-xs font-semibold text-slate-100 select-none'>{membersTitle}</p>
+        {!isOwner && members && <ImExit className='ml-auto text-2xl text-slate-100 cursor-pointer' onClick={() => removeMember(userId)}></ImExit>}
       </div>
-      {memberList}
+      <div>
+        {memberList}
+      </div>
     </div>
   );
 }
@@ -606,7 +610,7 @@ function MainMenu() {
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
 
             {/*MEMBER SIDEBAR*/}
-            <MemberList members={server?.members} memberData={memberData} ownerId={server?.ownerId} isOwner={server?.ownerId === userData?.userId} removeMember={removeMember}></MemberList>    
+            <MemberList members={server?.members} memberData={memberData} ownerId={server?.ownerId} userId={userData?.userId} isOwner={server?.ownerId === userData?.userId} removeMember={removeMember}></MemberList>    
           </div>
         </div>
       </div>
