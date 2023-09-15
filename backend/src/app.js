@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
 
     socket.on('refreshUserData', (data) => {
         console.log(data);
-        io.emit('refreshUserDataResponse', data);
+        io.emit('refreshUserDataResponse' + data.userId, data);
     });
 });
 

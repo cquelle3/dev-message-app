@@ -339,29 +339,14 @@ function MainMenu() {
       //console.log(value);
     }
 
-    async function onRefreshUserDataResponse(data){
-      if(userData?.userId === data?.userId){  
-        let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`, {headers: { 'Content-Type': 'application/json' }});
-        setUserData(resUserData?.data);
-
-        if(server && resUserData?.data?.servers.indexOf(server?._id) === -1){
-          setServer({});
-          setChannel({});
-          setMemberData({});
-        }
-      }
-    }
-
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
-    socket.on('refreshUserDataResponse', onRefreshUserDataResponse);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
-      socket.off('refreshUserDataResponse', onRefreshUserDataResponse);
     }
   });
 
@@ -370,27 +355,46 @@ function MainMenu() {
   //get user data when initializing
   useEffect(() => {
     async function getUserDataAuth(){
-      if(authInfo?.userId){
-        const userId = authInfo?.userId;    
-        let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`,
-          {
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-        setUserData(resUserData?.data);
-
-        //if the user has servers, load the first one
-        if(resUserData?.data?.servers.length > 0){
-          loadServer(resUserData?.data?.servers[0]);
+      const userId = authInfo?.userId;    
+      let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`,
+        {
+          headers: { 'Content-Type': 'application/json' }
         }
+      );
+      setUserData(resUserData?.data);
+
+      //if the user has servers, load the first one
+      if(resUserData?.data?.servers.length > 0){
+        loadServer(resUserData?.data?.servers[0]);
       }
     }
-    getUserDataAuth();
+
+    async function onRefreshUserDataResponse(data){
+      console.log('refreshing user data');
+      let resUserData = await axios.get(`${USER_DATA_URL}/${data.userId}`, {headers: { 'Content-Type': 'application/json' }});
+      setUserData(resUserData?.data);
+
+      console.log(data?.currServer);
+      console.log(resUserData?.data?.servers);
+
+      if(data.currServer && resUserData?.data?.servers.indexOf(data.currServer) === -1){
+        console.log('clearing data');
+        setServer({});
+        setChannel({});
+        setMemberData({});
+      }
+    }
+
+    if(authInfo?.userId){
+      getUserDataAuth();
+      socket.on('refreshUserDataResponse' + authInfo.userId, onRefreshUserDataResponse);
+      return () => socket.off('refreshUserDataResponse' + authInfo.userId, onRefreshUserDataResponse);
+    }
   }, [authInfo]);
 
 
 
-  //use effect for setting up message receiving sockets for servers
+  //use effect for setting up message receiving sockets for servers, and server refresh
   useEffect(() => {
     function onMessageResponse(data){
       if(data){
@@ -404,8 +408,10 @@ function MainMenu() {
     }
 
     async function onRefreshServerResponse(data){
-      console.log('refreshing server');
+      // console.log(data?.kickedUser);
+      // console.log(userData?.userId);
       if(data?.kickedUser !== userData?.userId){
+        console.log('refreshing server');
         loadServer(server?._id);
       }
     }
@@ -523,7 +529,7 @@ function MainMenu() {
       await axios.put(`${USER_DATA_URL}/${memDataRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
       
       //refresh user data
-      socket.emit('refreshUserData', {userId: memberId});
+      socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
     }
     await axios.delete(`${SERVER_URL}/${server._id}`, {headers: { 'Content-Type': 'application/json' }});
   }
@@ -630,7 +636,7 @@ function MainMenu() {
     await axios.put(`${USER_DATA_URL}/${getMemberRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
 
     //refresh user data for removed user
-    socket.emit('refreshUserData', {userId: memberId});
+    socket.emit('refreshUserData', {userId: memberId, currServer: server._id});
 
     //remove member from the server member list
     let serverMembers = server.members;
