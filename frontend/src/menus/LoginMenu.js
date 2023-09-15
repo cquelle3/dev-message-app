@@ -42,11 +42,7 @@ function LoginMenu() {
             setInvalidLogin(false);
 
             //call backend to verify login credentials
-            const res = await axios.post(LOGIN_URL, JSON.stringify({username, password}), 
-                {
-                    headers: { 'Content-Type': 'application/json' }
-                }
-            );
+            const res = await axios.post(LOGIN_URL, JSON.stringify({username, password}), {headers: { 'Content-Type': 'application/json' }});
 
             //clear the username and password strings
             setUsername('');

@@ -13,15 +13,7 @@ function InviteModal(props){
 
     //send invite to user
     async function inviteUser(user){
-        let res = await axios.get(`${USER_DATA_URL}/${user._id}`, 
-            {
-                headers: { 'Content-Type': 'application/json' }
-            }
-        ); 
-
-        console.log(res);
-        
-        console.log(props.currUserData);
+        let res = await axios.get(`${USER_DATA_URL}/${user._id}`, {headers: { 'Content-Type': 'application/json' }}); 
 
         let invites = res.data.invites;
         if(invites === undefined){
@@ -32,11 +24,7 @@ function InviteModal(props){
             invites[props.server._id] = {userName: props.currUserData.username, serverName: props.serverNames[props.server._id]};
         }
     
-        let resUpd = await axios.put(`${USER_DATA_URL}/${res.data._id}`, JSON.stringify({invites: invites}), 
-            {
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
+        let resUpd = await axios.put(`${USER_DATA_URL}/${res.data._id}`, JSON.stringify({invites: invites}), {headers: { 'Content-Type': 'application/json' }});
 
         //refresh user data for invited user
         props.socket.emit('refreshUserData', {userId: user._id});

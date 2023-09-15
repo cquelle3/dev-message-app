@@ -25,11 +25,7 @@ function CreateAccountMenu() {
         if(reEnterPassword === password && reEnterPassword.trim() !== '' && password.trim() !== ''){
             setInvalidUsername(false);
             try{
-                const res = await axios.post(REGISTER_URL, JSON.stringify({username, password}),
-                    {
-                        headers: { 'Content-Type': 'application/json' }
-                    }
-                );
+                const res = await axios.post(REGISTER_URL, JSON.stringify({username, password}), {headers: { 'Content-Type': 'application/json' }});
 
                 if(res.status === 200){
                     setAccountCreated(true);

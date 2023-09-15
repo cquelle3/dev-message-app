@@ -14,7 +14,7 @@ import axios from "axios";
 import { socket } from "../Socket/Socket";
 import EmojiPicker from "emoji-picker-react";
 import InviteModal from "../modals/InviteModal";
-import PendingInvitesModal from "../modals/PendingInvites";
+import PendingInvitesModal from "../modals/PendingInvitesModal";
 import CreateServerModal from "../modals/CreateServerModal";
 import CreateChannelModal from "../modals/CreateChannelModal";
 import SettingsModal from "../modals/SettingsModal";
@@ -229,7 +229,6 @@ function Channel({channelData, memberData, sendMessage}) {
   const [showEmojis, setShowEmojis] = useState(false);
 
   function handleEmoji(e){
-    console.log(e);
     let emoji = e.emoji;
     let newMsg = message + '' + emoji;
     setMessage(newMsg);
@@ -335,18 +334,12 @@ function MainMenu() {
       setIsConnected(false);
     }
 
-    function onMessage(value){
-      //console.log(value);
-    }
-
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
-    socket.on('message', onMessage);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
-      socket.off('message', onMessage);
     }
   });
 
@@ -356,11 +349,7 @@ function MainMenu() {
   useEffect(() => {
     async function getUserDataAuth(){
       const userId = authInfo?.userId;    
-      let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`,
-        {
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      let resUserData = await axios.get(`${USER_DATA_URL}/${userId}`, {headers: { 'Content-Type': 'application/json' }});
       setUserData(resUserData?.data);
 
       //if the user has servers, load the first one
@@ -370,15 +359,10 @@ function MainMenu() {
     }
 
     async function onRefreshUserDataResponse(data){
-      console.log('refreshing user data');
       let resUserData = await axios.get(`${USER_DATA_URL}/${data.userId}`, {headers: { 'Content-Type': 'application/json' }});
       setUserData(resUserData?.data);
 
-      console.log(data?.currServer);
-      console.log(resUserData?.data?.servers);
-
       if(data.currServer && resUserData?.data?.servers.indexOf(data.currServer) === -1){
-        console.log('clearing data');
         setServer({});
         setChannel({});
         setMemberData({});
@@ -408,10 +392,7 @@ function MainMenu() {
     }
 
     async function onRefreshServerResponse(data){
-      // console.log(data?.kickedUser);
-      // console.log(userData?.userId);
       if(data?.kickedUser !== userData?.userId){
-        console.log('refreshing server');
         loadServer(server?._id);
       }
     }
@@ -434,12 +415,7 @@ function MainMenu() {
     function getServerNames(){
       if(userData){
         userData.servers.forEach(async (serverId) => {
-          let nameRes = await axios.get(`${SERVER_URL}/name/${serverId}`, 
-            {
-              headers: { 'Content-Type': 'application/json' }
-            }
-          );
-          
+          let nameRes = await axios.get(`${SERVER_URL}/name/${serverId}`, {headers: { 'Content-Type': 'application/json' }});
           serverNames[serverId] = nameRes?.data.name;
         });
       }
@@ -452,25 +428,14 @@ function MainMenu() {
 
   //load the selected server
   async function loadServer(serverId) {
-    console.log('loading server');
-
     let currServerId = server?._id;
 
-    let res = await axios.get(`${SERVER_URL}/${serverId}`, 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let res = await axios.get(`${SERVER_URL}/${serverId}`, {headers: { 'Content-Type': 'application/json' }});
     
     //get server members data
     let newMemberData = {};
     for(let memberId of res?.data.members){
-      let memberRes = await axios.get(`${USER_DATA_URL}/${memberId}`,
-        {
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-
+      let memberRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
       newMemberData[memberId] = memberRes?.data;
     }
 
@@ -495,21 +460,13 @@ function MainMenu() {
   //add a new server
   async function addNewServer(serverName){
     //create a new server
-    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: serverName, members: [userData.userId], channels: {'general': []}, ownerId: userData.userId }), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverRes = await axios.post(SERVER_URL, JSON.stringify({ name: serverName, members: [userData.userId], channels: {'general': []}, ownerId: userData.userId }), {headers: { 'Content-Type': 'application/json' }});
     
     //update users server list
     let newServerList = userData?.servers;
     newServerList.push(serverRes?.data?._id);
     serverNames[serverRes?.data?._id] = serverName;
-    let userDataRes = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({ servers: newServerList }), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let userDataRes = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({ servers: newServerList }), {headers: { 'Content-Type': 'application/json' }});
 
     //update current displayed user data
     setUserData(userDataRes?.data);
@@ -518,14 +475,12 @@ function MainMenu() {
   
 
   async function deleteServer(){
-    console.log('deleting server...');
     //remove server from each members server list
     for(let memberId of server.members){
       let memDataRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
       let memberServers = memDataRes.data.servers;
       let index = memberServers.indexOf(server._id);
       memberServers.splice(index, 1);
-      console.log(memDataRes);
       await axios.put(`${USER_DATA_URL}/${memDataRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
       
       //refresh user data
@@ -598,31 +553,42 @@ function MainMenu() {
     let currServers = userData.servers;
     let currInvites = userData.invites;
 
-    //if the user does not have the server in their list already, add it to server list
-    if(currServers.findIndex((id) => id === serverId) === -1){
-      currServers.push(serverId);
-    }
-    //delete invite
-    delete currInvites[serverId];
-
-    //save user changes
-    let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({servers: currServers, invites: currInvites}), {headers: { 'Content-Type': 'application/json' }});
-
     //pull server user was invited to 
     let serverRes = await axios.get(`${SERVER_URL}/${serverId}`, {headers: { 'Content-Type': 'application/json' }});
+    //if the server exists
+    if(serverRes?.data){
 
-    //update server members to add new user
-    let mems = serverRes?.data.members;
-    if(mems.findIndex((id) => id === userData.userId) === -1){
-      mems.push(userData.userId);
+      //if the user does not have the server in their list already, add it to server list
+      if(currServers.findIndex((id) => id === serverId) === -1){
+        currServers.push(serverId);
+      }
+      //delete invite
+      delete currInvites[serverId];
+
+      //save user changes
+      let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({servers: currServers, invites: currInvites}), {headers: { 'Content-Type': 'application/json' }});
+
+      //update server members to add new user
+      let mems = serverRes?.data.members;
+      if(mems.findIndex((id) => id === userData.userId) === -1){
+        mems.push(userData.userId);
+      }
+      let serverUpd = await axios.put(`${SERVER_URL}/${serverId}`, JSON.stringify({members: mems}), {headers: { 'Content-Type': 'application/json' }});
+
+      //assign current users data to updated data
+      setUserData(userDataUpd?.data);
+
+      //refresh server for other members
+      socket.emit('refreshServer', {serverId: serverId});
     }
-    let serverUpd = await axios.put(`${SERVER_URL}/${serverId}`, JSON.stringify({members: mems}), {headers: { 'Content-Type': 'application/json' }});
-
-    //assign current users data to updated data
-    setUserData(userDataUpd?.data);
-
-    //refresh server for other members
-    socket.emit('refreshServer', {serverId: serverId});
+    else{
+      //delete invite
+      delete currInvites[serverId];
+      //save user changes
+      let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({invites: currInvites}), {headers: { 'Content-Type': 'application/json' }});
+      //assign current users data to updated data
+      setUserData(userDataUpd?.data)
+    }
   }
 
 
