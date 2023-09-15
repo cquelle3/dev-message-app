@@ -188,6 +188,7 @@ function Channel({channelData, memberData, sendMessage}) {
   const [showEmojis, setShowEmojis] = useState(false);
 
   function handleEmoji(e){
+    console.log(e);
     let emoji = e.emoji;
     let newMsg = message + '' + emoji;
     setMessage(newMsg);
@@ -202,12 +203,13 @@ function Channel({channelData, memberData, sendMessage}) {
     channelData?.messages.forEach((message, i) => {
       let msgUserId = message?.userId;
       let msgUsername = memberData[msgUserId]?.username !== undefined ? memberData[msgUserId]?.username : '[user removed]';
+      let msgIcon = memberData[msgUserId]?.username !== undefined ? memberData[msgUserId]?.username[0] : '';
       messageList.push(
         <div key={i} className='flex pb-6'>
-            <div className='shrink-0 bg-slate-300 w-12 h-12 rounded-full select-none'></div>
+            <div className='flex items-center justify-center shrink-0 bg-slate-300 w-14 h-14 font-medium text-slate-500 text-xl rounded-full select-none'>{msgIcon}</div>
             <div className='pl-3'>
-              <p className='font-medium text-slate-400 mb-0'>{msgUsername}</p>
-              <p className='break-all font-medium text-slate-100'>{message?.text}</p>
+              <p className='font-medium text-lg text-slate-400 mb-0'>{msgUsername}</p>
+              <p className='break-all font-medium text-lg text-slate-100'>{message?.text}</p>
             </div>
         </div>
       );
