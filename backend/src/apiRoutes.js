@@ -97,7 +97,7 @@ router.get('/server/:id', async (req, res) => {
 router.get('/server/name/:id', async (req, res) => {
     const { id } = req.params;
     const server = await Server.findById(id);
-    return res.status(200).json({"name": server.name});
+    return res.status(200).json({"name": server?.name});
 });
 
 //post new server

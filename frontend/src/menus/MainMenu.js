@@ -5,6 +5,7 @@ import { AiOutlinePlusCircle } from "react-icons/ai";
 import { BiSolidCrown } from "react-icons/bi";
 import { IoMdSettings } from "react-icons/io";
 import { FaTrashCan } from "react-icons/fa";
+import { RiDeleteBin2Fill } from "react-icons/ri"; 
 import { ImExit } from "react-icons/im";
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -75,7 +76,7 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
           <div className='flex items-center pt-2.5 w-44 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
             <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
           </div>
-          {isOwner &&
+          {isOwner && channelNames.length > 1 &&
             <div className='pb-1.5 pl-2'>
               <BsTrashFill className='text-slate-100 text-xl cursor-pointer' onClick={() => deleteChannel(channelName)}></BsTrashFill>
             </div>
@@ -148,7 +149,7 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
   );
 }
 
-function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner}){
+function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner, deleteServer}){
 
   const [openDropdown, setOpenDropdown] = useState(false);
 
@@ -157,7 +158,13 @@ function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner}){
     <div className='flex h-20 w-full'>
       {/*SERVER HEADER*/}
       <div className='flex items-center w-full p-5 bg-slate-800'>
-        <h1 className='text-2xl font-semibold text-slate-100 select-none'>{server?.name}</h1>
+        {isOwner && <div className='pr-10 pb-2'>
+          <RiDeleteBin2Fill className='text-3xl text-slate-100 cursor-pointer' onClick={() => deleteServer()}></RiDeleteBin2Fill>
+        </div>}
+
+        <div className='w-1/2'>
+          <h1 className='text-2xl truncate font-semibold text-slate-100 select-none'>{server?.name}</h1>
+        </div>
 
         <div className='ml-auto'>
           <IoMdSettings className='text-2xl text-slate-100 cursor-pointer' onClick={() => openSettings()}></IoMdSettings>
@@ -378,14 +385,14 @@ function MainMenu() {
   useEffect(() => {
     function getServerNames(){
       if(userData){
-        userData.servers.forEach(async (server) => {
-          let nameRes = await axios.get(`${SERVER_URL}/name/${server}`, 
+        userData.servers.forEach(async (serverId) => {
+          let nameRes = await axios.get(`${SERVER_URL}/name/${serverId}`, 
             {
               headers: { 'Content-Type': 'application/json' }
             }
           );
           
-          serverNames[server] = nameRes?.data.name;
+          serverNames[serverId] = nameRes?.data.name;
         });
       }
     }
@@ -460,6 +467,25 @@ function MainMenu() {
     setUserData(userDataRes?.data);
   }
 
+  
+
+  async function deleteServer(){
+    console.log('deleting server...');
+    //remove server from each members server list
+    for(let memberId of server.members){
+      let memDataRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
+      let memberServers = memDataRes.data.servers;
+      let index = memberServers.indexOf(server._id);
+      memberServers.splice(index, 1);
+      console.log(memDataRes);
+      await axios.put(`${USER_DATA_URL}/${memDataRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
+      
+      //refresh user data
+      socket.emit('refreshUserData', {userId: memberId});
+    }
+    await axios.delete(`${SERVER_URL}/${server._id}`, {headers: { 'Content-Type': 'application/json' }});
+  }
+
 
 
   function loadChannel(channel){
@@ -473,11 +499,7 @@ function MainMenu() {
     let currChannels = server?.channels;
     currChannels[channelName] = [];
 
-    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), {headers: { 'Content-Type': 'application/json' }});
 
     //refresh server for other members
     socket.emit('refreshServer', {serverId: server._id});
@@ -488,11 +510,7 @@ function MainMenu() {
     let currChannels = server?.channels;
     delete currChannels[channelName];
 
-    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), {headers: { 'Content-Type': 'application/json' }});
     
     //refresh server for other members
     socket.emit('refreshServer', {serverId: server._id});
@@ -514,11 +532,7 @@ function MainMenu() {
     serverUpdate.channels[channel.channelName] = msgList;
 
     //save to server
-    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: serverUpdate.channels}), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: serverUpdate.channels}), {headers: { 'Content-Type': 'application/json' }});
 
     //emit message to socket.io to notify other users
     socket.emit('message', {message: newMsg, channelName: channel?.channelName, serverId: server?._id});
@@ -599,7 +613,7 @@ function MainMenu() {
         <div className='flex flex-col h-screen w-screen'>
           
           {/*SERVER HEADER*/}
-          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)} isOwner={server?.ownerId === userData?.userId}></ServerHeader>
+          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)} isOwner={server?.ownerId === userData?.userId} deleteServer={deleteServer}></ServerHeader>
 
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>
