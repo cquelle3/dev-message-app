@@ -65,11 +65,12 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
   const channelList = [];
   var channelsTitle = "";
   var addChannelButton = <></>;
+
   if(channels){
     let channelNames = Object.keys(channels);
     channelNames.forEach((channelName, i) => {
       channelList.push(
-        <div key={i} className='flex items-center'>
+        <div key={channelName} className='flex items-center'>
           <div className='flex items-center pt-2.5 w-44 hover:bg-slate-600 rounded cursor-pointer' onClick={() => loadChannel({ channelName: channelName, messages: channels[channelName] })}>
             <p className='truncate pl-2 font-medium text-slate-100 select-none'># {channelName}</p>
           </div>
@@ -285,14 +286,7 @@ function MainMenu() {
 
     async function onRefreshServerResponse(data){
       if(server?._id === data?.serverId){
-        let chanName = "";
-        if(channel){
-          chanName = channel.channelName;
-        }
         await loadServer(server?._id);
-        if(chanName !== ""){
-          setChannel({ channelName: chanName, messages: server.channels[chanName] });
-        }
       }
     }
 
@@ -392,6 +386,8 @@ function MainMenu() {
 
   //load the selected server
   async function loadServer(serverId) {
+    let currServerId = server?._id;
+
     let res = await axios.get(`${SERVER_URL}/${serverId}`, 
       {
         headers: { 'Content-Type': 'application/json' }
@@ -412,7 +408,18 @@ function MainMenu() {
 
     setMemberData(newMemberData);
     setServer(res?.data);
-    setChannel(null);
+
+    if(channel && currServerId === serverId){
+      if(res?.data.channels[channel.channelName] === undefined){
+        setChannel(null);
+      }
+      else{
+        setChannel({ channelName: channel.channelName, messages: res?.data.channels[channel.channelName] });
+      }
+    }
+    else{
+      setChannel(null);
+    }
   }
 
 
@@ -465,7 +472,17 @@ function MainMenu() {
 
 
   async function deleteChannel(channelName){
-    console.log(channelName);
+    let currChannels = server?.channels;
+    delete currChannels[channelName];
+
+    let serverRes = await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({channels: currChannels}), 
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    
+    //refresh server for other members
+    socket.emit('refreshServer', {serverId: server._id});
   }
 
 
