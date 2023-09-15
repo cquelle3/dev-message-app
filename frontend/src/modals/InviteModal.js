@@ -33,12 +33,9 @@ function InviteModal(props){
     //search for users
     async function searchUsers(){
         if(userSearch.trim() !== ""){
-            let res = await axios.get(`${USER_URL}/search/${userSearch}`, 
-                {
-                    headers: { 'Content-Type': 'application/json' }
-                }
-            );
-            setUserSearchList(res?.data);
+            let res = await axios.get(`${USER_URL}/search/${userSearch}`, {headers: { 'Content-Type': 'application/json' }});
+            let searchList = res?.data.filter((user) => user._id !== props.currUserData.userId)
+            setUserSearchList(searchList);
         }
         else{
             setUserSearchList(null);
