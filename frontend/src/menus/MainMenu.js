@@ -1,4 +1,4 @@
-import { BsEmojiSmile, BsFillPersonPlusFill, BsTrashFill } from "react-icons/bs";
+import { BsEmojiSmile, BsFillPersonPlusFill, BsPersonDashFill, BsTrashFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
@@ -106,21 +106,26 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
   );
 }
 
-function MemberList({members, memberData, ownerId}){
+function MemberList({members, memberData, ownerId, isOwner, removeMember}){
   const memberList = [];
   var membersTitle = "";
   if(members){
     members.forEach((memberId, i) => {
       let memberUsername = memberData[memberId]?.username;
       memberList.push(
-        <div key={i} className='flex items-center px-2 hover:bg-slate-600 rounded'>
-            <div className='bg-slate-300 w-10 h-10 rounded-full select-none'></div>
-            <div className='flex pl-3 pt-3'>
-              <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
-              {ownerId === memberId && <div className='pl-3 pt-0.5'>
-                <BiSolidCrown className='text-slate-100 text-xl'></BiSolidCrown>
-              </div>}
-            </div>
+        <div key={i} className='flex items-center'>
+          <div className='flex items-center w-96 px-2 hover:bg-slate-600 rounded'>
+              <div className='shrink-0 bg-slate-300 w-10 h-10 rounded-full select-none'></div>
+              <div className='flex pl-3 pt-3'>
+                <p className='font-medium text-slate-100 select-none'>{memberUsername}</p>
+                {ownerId === memberId && <div className='pl-3 pt-0.5'>
+                  <BiSolidCrown className='text-slate-100 text-xl'></BiSolidCrown>
+                </div>}
+              </div>
+          </div>
+          {ownerId !== memberId && isOwner && <div className='ml-auto pl-3'>
+            <BsPersonDashFill className='text-slate-100 text-2xl cursor-pointer' onClick={() => removeMember(memberId)}></BsPersonDashFill>
+          </div>}
         </div>
       )
     });
@@ -182,14 +187,14 @@ function Channel({channelData, memberData, sendMessage}) {
     setShowEmojis(false);
   }
 
-  if(channelData){
+  if(channelData?.messages){
     //set header name to channel name
     channelHeader = channelData?.channelName;
 
     //push messages to array
     channelData?.messages.forEach((message, i) => {
       let msgUserId = message?.userId;
-      let msgUsername = memberData[msgUserId]?.username;
+      let msgUsername = memberData[msgUserId]?.username !== undefined ? memberData[msgUserId]?.username : '[user removed]';
       messageList.push(
         <div key={i} className='flex pb-6'>
             <div className='shrink-0 bg-slate-300 w-12 h-12 rounded-full select-none'></div>
@@ -285,19 +290,21 @@ function MainMenu() {
     }
 
     async function onRefreshServerResponse(data){
-      if(server?._id === data?.serverId){
-        await loadServer(server?._id);
+      if(server?._id === data?.serverId && data?.kickedUser !== userData?.userId){
+        loadServer(server?._id);
       }
     }
 
-    async function onRefreshUserData(data){
+    async function onRefreshUserDataResponse(data){
       if(userData?.userId === data?.userId){  
-        let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`,
-          {
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
+        let resUserData = await axios.get(`${USER_DATA_URL}/${userData?.userId}`, {headers: { 'Content-Type': 'application/json' }});
         setUserData(resUserData?.data);
+
+        if(server && resUserData?.data?.servers.indexOf(server?._id) === -1){
+          setServer({});
+          setChannel({});
+          setMemberData({});
+        }
       }
     }
 
@@ -305,14 +312,14 @@ function MainMenu() {
     socket.on('disconnect', onDisconnect);
     socket.on('message', onMessage);
     socket.on('refreshServerResponse', onRefreshServerResponse);
-    socket.on('refreshUserDataResponse', onRefreshUserData);
+    socket.on('refreshUserDataResponse', onRefreshUserDataResponse);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('message', onMessage);
       socket.off('refreshServerResponse', onRefreshServerResponse);
-      socket.off('refreshUserDataResponse', onRefreshUserData);
+      socket.off('refreshUserDataResponse', onRefreshUserDataResponse);
     }
   });
 
@@ -386,6 +393,8 @@ function MainMenu() {
 
   //load the selected server
   async function loadServer(serverId) {
+    console.log('loading server');
+
     let currServerId = server?._id;
 
     let res = await axios.get(`${SERVER_URL}/${serverId}`, 
@@ -531,35 +540,46 @@ function MainMenu() {
     delete currInvites[serverId];
 
     //save user changes
-    let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({servers: currServers, invites: currInvites}), 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let userDataUpd = await axios.put(`${USER_DATA_URL}/${userData._id}`, JSON.stringify({servers: currServers, invites: currInvites}), {headers: { 'Content-Type': 'application/json' }});
 
     //pull server user was invited to 
-    let serverRes = await axios.get(`${SERVER_URL}/${serverId}`, 
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverRes = await axios.get(`${SERVER_URL}/${serverId}`, {headers: { 'Content-Type': 'application/json' }});
 
     //update server members to add new user
     let mems = serverRes?.data.members;
     if(mems.findIndex((id) => id === userData.userId) === -1){
       mems.push(userData.userId);
     }
-    let serverUpd = await axios.put(`${SERVER_URL}/${serverId}`, JSON.stringify({members: mems}),
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    let serverUpd = await axios.put(`${SERVER_URL}/${serverId}`, JSON.stringify({members: mems}), {headers: { 'Content-Type': 'application/json' }});
 
     //assign current users data to updated data
     setUserData(userDataUpd?.data);
 
     //refresh server for other members
     socket.emit('refreshServer', {serverId: serverId});
+  }
+
+
+
+  async function removeMember(memberId){
+    //get members data, remove server from their server list
+    let getMemberRes = await axios.get(`${USER_DATA_URL}/${memberId}`, {headers: { 'Content-Type': 'application/json' }});
+    let memberServers = getMemberRes?.data?.servers;
+    let serverIndex = memberServers.indexOf(server._id);
+    memberServers.splice(serverIndex, 1);
+    await axios.put(`${USER_DATA_URL}/${getMemberRes.data._id}`, JSON.stringify({servers: memberServers}), {headers: { 'Content-Type': 'application/json' }});
+
+    //refresh user data for removed user
+    socket.emit('refreshUserData', {userId: memberId});
+
+    //remove member from the server member list
+    let serverMembers = server.members;
+    let memberIndex = serverMembers.indexOf(memberId);
+    serverMembers.splice(memberIndex, 1);
+    await axios.put(`${SERVER_URL}/${server._id}`, JSON.stringify({members: serverMembers}), {headers: { 'Content-Type': 'application/json' }});
+
+    //refresh server for other members
+    socket.emit('refreshServer', {serverId: server._id, kickedUser: memberId});
   }
 
 
@@ -586,7 +606,7 @@ function MainMenu() {
             <Channel channelData={channel} memberData={memberData} sendMessage={sendMessage}></Channel>
 
             {/*MEMBER SIDEBAR*/}
-            <MemberList members={server?.members} memberData={memberData} ownerId={server?.ownerId}></MemberList>    
+            <MemberList members={server?.members} memberData={memberData} ownerId={server?.ownerId} isOwner={server?.ownerId === userData?.userId} removeMember={removeMember}></MemberList>    
           </div>
         </div>
       </div>
