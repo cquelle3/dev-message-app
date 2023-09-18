@@ -1,4 +1,4 @@
-import { BsEmojiSmile, BsFillPersonPlusFill, BsPersonDashFill, BsTrashFill } from "react-icons/bs";
+import { BsDot, BsEmojiSmile, BsFillPersonPlusFill, BsPersonDashFill, BsTrashFill } from "react-icons/bs";
 import { FiMail } from "react-icons/fi";
 import { HiPlus } from "react-icons/hi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
@@ -131,6 +131,7 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
         <div key={i} className='flex items-center'>
           <div className='flex items-center w-96 px-2 hover:bg-slate-600 rounded'>
               <div className='flex items-center justify-center shrink-0 bg-slate-300 w-10 h-10 font-medium text-slate-500 text-lg rounded-full select-none'>{memberIcon}</div>
+              {userId === memberId && <div className='absolute ml-8 mt-8 shrink-0 w-3 h-3 rounded bg-slate-100 outline outline-slate-700'></div>}
               <div className='flex w-64 pl-3 pt-3'>
                 <p className='truncate font-medium text-slate-100 select-none'>{memberUsername}</p>
                 {ownerId === memberId && <div className='pl-3 pt-0.5'>
@@ -160,7 +161,6 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
       <div className='flex items-center pb-2'>
         <p className='text-xs font-semibold text-slate-100 select-none'>{membersTitle}</p>
         {!isOwner && members && 
-
           <div className='ml-auto pb-2'>
             <OverlayTrigger placement="left" overlay={<InfoPopup popupText="Leave Channel" padding='pr-2'></InfoPopup>}>
               <div>
@@ -177,9 +177,15 @@ function MemberList({members, memberData, ownerId, userId, isOwner, removeMember
   );
 }
 
-function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner, deleteServer}){
+function ServerHeader({server, invites, inviteUser, openInvites, openSettings, isOwner, deleteServer}){
 
-  const [openDropdown, setOpenDropdown] = useState(false);
+  let inviteList = [];
+  if(invites){
+    inviteList = Object.keys(invites);
+  }
+  else{
+    inviteList = [];
+  }
 
   return (
     <>
@@ -207,6 +213,7 @@ function ServerHeader({server, inviteUser, openInvites, openSettings, isOwner, d
         <div className='pl-10'>
           <OverlayTrigger placement="bottom" overlay={<InfoPopup popupText="Invites"></InfoPopup>}>
             <div className='pb-2' onClick={() => openInvites()}>
+              {inviteList.length > 0 && <div className='absolute rounded w-3 h-3 ml-4 bg-slate-100 outline outline-2.5 outline-slate-800'></div>}
               <FiMail className='text-2xl text-slate-100 cursor-pointer' onClick={() => openInvites()}></FiMail>
             </div>
           </OverlayTrigger>
@@ -649,7 +656,7 @@ function MainMenu() {
         <div className='flex flex-col h-screen w-screen'>
           
           {/*SERVER HEADER*/}
-          <ServerHeader server={server} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)} isOwner={server?.ownerId === userData?.userId} deleteServer={deleteServer}></ServerHeader>
+          <ServerHeader server={server} invites={userData?.invites} inviteUser={inviteUser} openInvites={() => setShowPendingInvModal(true)} openSettings={() => setShowSettingsModal(true)} isOwner={server?.ownerId === userData?.userId} deleteServer={deleteServer}></ServerHeader>
 
           {/*SERVER CONTENT*/}
           <div className='flex flex-1 overflow-auto'>

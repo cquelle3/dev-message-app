@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Modal, Toast, ToastContainer } from "react-bootstrap";
 import { Form } from "react-bootstrap";
 
 const USER_URL = "http://localhost:3001/api/users";
@@ -10,9 +10,12 @@ function InviteModal(props){
 
     const [userSearch, setUserSearch] = useState("");
     const [userSearchList, setUserSearchList] = useState(null);
+    const [inviteSent, setInviteSent] = useState(false);
 
     //send invite to user
     async function inviteUser(user){
+        setInviteSent(false);
+
         let res = await axios.get(`${USER_DATA_URL}/${user._id}`, {headers: { 'Content-Type': 'application/json' }}); 
 
         let invites = res.data.invites;
@@ -28,6 +31,8 @@ function InviteModal(props){
 
         //refresh user data for invited user
         props.socket.emit('refreshUserData', {userId: user._id});
+
+        setInviteSent(true);
     }
 
     //search for users
@@ -85,6 +90,12 @@ function InviteModal(props){
                 <div className='pt-3 px-3 max-h-96 overflow-auto'>
                     {userList} 
                 </div>
+
+                <ToastContainer className='pt-10 pl-14'>
+                    <Toast onClose={() => setInviteSent(false)} show={inviteSent} delay={1500} autohide>
+                        <Toast.Body>Invite sent!</Toast.Body>
+                    </Toast>
+                </ToastContainer>
             </Modal.Body>
         </Modal>
     );
