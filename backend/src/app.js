@@ -16,12 +16,12 @@ const http = require('http').Server(app);
 const { Server } = require('socket.io');
 const io = require('socket.io')(http, {
     cors: {
-        origin: 'http://localhost:3000'
+        origin: `${process.env.FRONTEND_URL}`
     }
 });
 
 app.use(cors({
-    origin: 'http://localhost:3000'
+    origin: `${process.env.FRONTEND_URL}`
 }));
 app.use(bodyParser.json());
 
