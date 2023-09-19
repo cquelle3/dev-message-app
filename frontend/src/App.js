@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 
-const VERIFY_URL = 'http://localhost:3001/auth/verify';
+const VERIFY_URL = `${process.env.REACT_APP_SERVER_URL}/auth/verify`;
 
 export const AuthContext = React.createContext(null);
 

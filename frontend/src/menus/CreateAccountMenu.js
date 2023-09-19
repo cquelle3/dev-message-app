@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AiFillCheckCircle } from "react-icons/ai";
 
-const REGISTER_URL = 'http://localhost:3001/auth/register';
+const REGISTER_URL = `${process.env.REACT_APP_SERVER_URL}/auth/register`;
 
 function CreateAccountMenu() {
 

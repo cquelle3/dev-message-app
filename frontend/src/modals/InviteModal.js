@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Modal, Toast, ToastContainer } from "react-bootstrap";
 import { Form } from "react-bootstrap";
 
-const USER_URL = "http://localhost:3001/api/users";
-const USER_DATA_URL = "http://localhost:3001/api/userData";
+const USER_URL = `${process.env.REACT_APP_SERVER_URL}/api/users`;
+const USER_DATA_URL = `${process.env.REACT_APP_SERVER_URL}/api/userData`;
 
 function InviteModal(props){
 

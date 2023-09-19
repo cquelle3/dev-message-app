@@ -22,8 +22,8 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { createConfirmation } from "react-confirm";
 import ConfirmModal from "../modals/ConfirmModal";
 
-const USER_DATA_URL = "http://localhost:3001/api/userData";
-const SERVER_URL = "http://localhost:3001/api/server";
+const USER_DATA_URL = `${process.env.REACT_APP_SERVER_URL}/api/userData`;
+const SERVER_URL = `${process.env.REACT_APP_SERVER_URL}/api/server`;
 
 const confirm = createConfirmation(ConfirmModal);
 

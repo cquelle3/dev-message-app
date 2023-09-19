@@ -4,8 +4,7 @@ import { Link, createSearchParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
 import { AiFillWechat } from "react-icons/ai";
 
-const LOGIN_URL = 'http://localhost:3001/auth/login';
-const VERIFY_URL = 'http://localhost:3001/auth/verify';
+const LOGIN_URL = `${process.env.REACT_APP_SERVER_URL}/auth/login`;
 
 function LoginMenu() {
 

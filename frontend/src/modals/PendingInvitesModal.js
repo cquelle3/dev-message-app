@@ -1,9 +1,6 @@
 import axios from "axios";
 import { Form, Modal } from "react-bootstrap";
 
-const USER_DATA_URL = "http://localhost:3001/api/userData";
-const SERVER_URL = "http://localhost:3001/api/server";
-
 function PendingInvitesModal(props){
 
     let inviteList = [];
