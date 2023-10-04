@@ -97,7 +97,7 @@ function ChannelList({channels, loadChannel, createChannel, deleteChannel, isOwn
       <div className='pl-3'>
         <OverlayTrigger placement="top" overlay={<InfoPopup popupText="Create Channel" padding='pb-2'></InfoPopup>}>
           <div>
-            <AiOutlinePlusCircle className='text-2xl text-slate-100 cursor-pointer' onClick={() => createChannel()}></AiOutlinePlusCircle>;
+            <AiOutlinePlusCircle className='text-2xl text-slate-100 cursor-pointer' onClick={() => createChannel()}></AiOutlinePlusCircle>
           </div>
         </OverlayTrigger>
       </div>
